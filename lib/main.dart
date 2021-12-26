@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:octo_pet/ui.dart';
+import 'package:audiofileplayer/audiofileplayer.dart';
 
 void main() => runApp(MyApp());
 
@@ -14,29 +15,30 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         textButtonTheme: TextButtonThemeData(
           style: ElevatedButton.styleFrom(
+            enableFeedback: false,
             primary: Colors.transparent, // Button color
-            onPrimary: Color(0xFF222222),
-            padding: EdgeInsets.symmetric(
+            onPrimary: const Color(0xFF222222),
+            padding: const EdgeInsets.symmetric(
               vertical: 20.0,
               horizontal: 10.0,
             ),
-            shape: RoundedRectangleBorder(
+            shape: const RoundedRectangleBorder(
               borderRadius: BorderRadius.all(Radius.circular(0)),
             ),
-            textStyle: TextStyle(
+            textStyle: const TextStyle(
               fontFamily: 'EarlyGameboy',
               fontSize: 18.0,
             ),
-            side: BorderSide(
+            side: const BorderSide(
               width: 6.0,
               color: Color(0xFF222222),
             ),
           ),
         ),
         textTheme: Theme.of(context).textTheme.apply(
-              bodyColor: Color(0xFF222222),
+              bodyColor: const Color(0xFF222222),
               fontFamily: 'EarlyGameboy',
-              displayColor: Color(0xFF222222),
+              displayColor: const Color(0xFF222222),
             ),
       ),
       home: MyHomePage(),
@@ -50,15 +52,17 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  bool petLove = false;
   double petHunger = 1.0;
   double petHappiness = 1.0;
   double petHealth = 1.0;
   final petSprites = [
-    'https://i.imgur.com/eR1dsFg.png',
-    'https://i.imgur.com/EcdT7CY.png'
+    'assets/images/pet1layer1.png',
+    'assets/images/pet1layer2.png'
   ];
+  final wasteSprites = ['assets/images/waste1.png', 'assets/images/waste2.png'];
+  bool showWaste = false;
   int _index = 0;
+  Audio audioUI = Audio.load('assets/sfx/ui.wav');
 
   @override
   void initState() {
@@ -71,7 +75,7 @@ class _MyHomePageState extends State<MyHomePage> {
     Timer.periodic(Duration(seconds: 1), (timer) {
       setState(() => _index++);
     });
-    // Hunger Loop
+    // Game Loop
     Timer.periodic(const Duration(seconds: 1), (timer) {
       double incrementModifier = 0.1;
       double positiveModifier = 0.2;
@@ -109,9 +113,16 @@ class _MyHomePageState extends State<MyHomePage> {
     // Health Loop
   }
 
-  actionFeed() {
+  actionFeed() async {
     setState(() {
+      audioUI.play();
       petHunger = 1.0;
+    });
+  }
+
+  actionPlay() {
+    setState(() {
+      petHappiness = 1.0;
     });
   }
 
@@ -124,7 +135,7 @@ class _MyHomePageState extends State<MyHomePage> {
           image: DecorationImage(
             repeat: ImageRepeat.repeat,
             alignment: Alignment(0, 7),
-            image: NetworkImage("https://i.imgur.com/9cXaDb2.png"),
+            image: AssetImage('assets/images/bg.png'),
           ),
         ),
         child: SafeArea(
@@ -138,6 +149,7 @@ class _MyHomePageState extends State<MyHomePage> {
               Expanded(
                 child: Center(
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: <Widget>[
                       Stack(
@@ -147,15 +159,17 @@ class _MyHomePageState extends State<MyHomePage> {
                             onTap: () => {},
                             child: Stack(
                               children: [
-                                SizedBox(
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.75,
-                                  child: AnimatedSwitcher(
-                                    duration:
-                                        const Duration(milliseconds: 1000),
-                                    child: Image.network(
-                                      petSprites[_index % petSprites.length],
-                                      fit: BoxFit.fitWidth,
+                                Center(
+                                  child: SizedBox(
+                                    width:
+                                        MediaQuery.of(context).size.width * 0.7,
+                                    child: AnimatedSwitcher(
+                                      duration:
+                                          const Duration(milliseconds: 1000),
+                                      child: Image.asset(
+                                        petSprites[_index % petSprites.length],
+                                        fit: BoxFit.fitWidth,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -163,12 +177,21 @@ class _MyHomePageState extends State<MyHomePage> {
                             ),
                           ),
                           Positioned(
-                            top: -240,
+                            top: -MediaQuery.of(context).size.width * 0.675,
                             left: 0,
                             right: 0,
                             child: petHealth < 0.5
-                                ? Image.network(
-                                    'https://i.imgur.com/eS0gpmW.png')
+                                ? Image.asset('assets/images/hungry.png')
+                                : Container(),
+                          ),
+                          Positioned(
+                            bottom: -MediaQuery.of(context).size.width * 0.4,
+                            left: 0,
+                            child: petHunger < 0.5
+                                ? Image.asset(
+                                    wasteSprites[_index % wasteSprites.length],
+                                    fit: BoxFit.fitWidth,
+                                  )
                                 : Container(),
                           ),
                         ],
@@ -202,7 +225,9 @@ class _MyHomePageState extends State<MyHomePage> {
                     const SizedBox(width: 5),
                     Expanded(
                       child: TextButton(
-                        onPressed: () {},
+                        onPressed: () {
+                          actionPlay();
+                        },
                         child: const FittedBox(
                           fit: BoxFit.scaleDown,
                           child: Text(
@@ -218,7 +243,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         child: const FittedBox(
                           fit: BoxFit.scaleDown,
                           child: Text(
-                            "Stats",
+                            "Items",
                           ),
                         ),
                       ),

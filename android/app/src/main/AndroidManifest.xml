@@ -2,7 +2,8 @@
     package="com.johnuberbacher.octo_pet">
    <application
         android:label="octo_pet"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:usesCleartextTraffic="true">
         <activity
             android:name=".MainActivity"
             android:launchMode="singleTop"
