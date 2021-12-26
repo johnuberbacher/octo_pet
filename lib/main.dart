@@ -110,7 +110,6 @@ class _MyHomePageState extends State<MyHomePage> {
         });
       }
     });
-    // Health Loop
   }
 
   actionFeed() async {
