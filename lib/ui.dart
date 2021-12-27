@@ -40,23 +40,34 @@ class _UserInterfaceWidgetState extends State<UserInterfaceWidget> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-                padding: EdgeInsets.only(
-                  bottom: 10.0,
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      "Octo-Fox",
-                      style: TextStyle(fontSize: 24),
-                    ),
-                    Text(
-                      "12/26/21",
-                      style: TextStyle(fontSize: 12),
-                    ),
-                  ],
-                )),
+              padding: EdgeInsets.only(
+                bottom: 10.0,
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    "Octo-Fox",
+                    style: TextStyle(fontSize: 26),
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        "12/26/21",
+                        style: TextStyle(fontSize: 12),
+                      ),
+                      Text(
+                        "Lvl. 1",
+                        style: TextStyle(fontSize: 12),
+                      ),
+                    ],
+                  )
+                ],
+              ),
+            ),
             Padding(
               padding: const EdgeInsets.only(
                 bottom: 10.0,
