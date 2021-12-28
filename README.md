@@ -8,10 +8,17 @@ A digial pet gaming app built with Dart and Flutter. Feed, play and watch Octo-P
 ### Screenshot
 ![Screenshot](https://i.imgur.com/Sk1Npdg.gif)
 
+### Dependencies
+[localstorage](https://pub.dev/packages/localstorage)
+
+[audiofileplayer](https://pub.dev/packages/audiofileplayer)
+
+
+
 ### Installation
 
 ```
-git clone https://github.com/johnuberbacher/pokedex.git
+git clone https://github.com/johnuberbacher/octo_pet.git
 
 flutter pub get
 
