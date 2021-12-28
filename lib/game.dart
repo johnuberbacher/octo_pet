@@ -9,6 +9,8 @@ import 'package:audiofileplayer/audiofileplayer.dart';
 import 'package:localstorage/localstorage.dart';
 
 class Game extends StatefulWidget {
+  const Game({Key? key}) : super(key: key);
+
   @override
   _GameState createState() => _GameState();
 }
@@ -17,9 +19,10 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
   final LocalStorage storage = LocalStorage('petData.json');
   String petType = 'octo-egg';
   String petDob = '';
-  double petHunger = 1.0;
+  double petHunger = 0.1;
   double petHappiness = 1.0;
   double petHealth = 1.0;
+  String petMood = '';
   String hatchMsg = 'Hatch me!';
   int hatchCount = 0;
   int petLevel = 0;
@@ -44,6 +47,8 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
   int gameTickerDuration = 1000;
   Audio audioUI = Audio.load('assets/sfx/ui.wav');
   Audio audioClean = Audio.load('assets/sfx/clean.wav');
+  Audio audioHatch = Audio.load('assets/sfx/hatch.wav');
+  Audio audioSpawn = Audio.load('assets/sfx/spawn.wav');
   Audio audioFull = Audio.load('assets/sfx/full.wav');
 
   @override
@@ -85,8 +90,9 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
   }
 
   void loadData() async {
-    if (petType == 'octo-egg') {
-      await storage.ready;
+    await storage.ready;
+    // If you have an egg or are a new player
+    if (storage.getItem('petType') == 'octo-egg') {
       storage.setItem('petType', 'octo-egg');
       storage.setItem(
         'petDob',
@@ -95,31 +101,27 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
             .substring(0, 10)
             .replaceAll(RegExp(r'[^\w\s]+'), '/'),
       );
-      storage.setItem('petHunger', 0.5);
-      storage.setItem('petHappiness', 0.5);
-      storage.setItem('petHealth', 0.5);
+      storage.setItem('petHunger', 1.0);
+      storage.setItem('petHappiness', 1.0);
+      storage.setItem('petHealth', 1.0);
       storage.setItem('petLevel', 0);
+    } else {
+      await storage.ready;
+      petType = storage.getItem('petType');
+      petDob = storage.getItem('petDob');
+      petHunger = storage.getItem('petHunger');
+      petHappiness = storage.getItem('petHappiness');
+      petHealth = storage.getItem('petHealth');
+      petHealth = storage.getItem('petLevel');
     }
-
-    await storage.ready;
-    petType = storage.getItem('petType');
-    petDob = storage.getItem('petDob');
-    petHunger = storage.getItem('petHunger');
-    petHappiness = storage.getItem('petHappiness');
-    petHealth = storage.getItem('petHealth');
-    petHealth = storage.getItem('petLevel');
-    print(petType);
-    print(petDob);
-    print(petHunger);
-    print(petLevel);
   }
 
   void gameLoop() {
     // Game Loop
     Timer.periodic(Duration(milliseconds: gameTickerDuration), (timer) {
       setState(() => gameTicker++);
-      double incrementModifier = 0.01;
-      double positiveModifier = 0.02;
+      double incrementModifier = 0.025;
+      double positiveModifier = 0.05;
       double minimumModifier = 0.15;
       double maximumModifier = 0.75;
 
@@ -128,18 +130,19 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
         if (petHunger > minimumModifier) {
           setState(() {
             petHunger -= incrementModifier;
-            print(petHunger);
           });
         }
         // Waste Loop
-        if (petHunger <= 0.5) {
-          int randomWasteEncounter = (Random().nextInt(200) + 1);
-          if (randomWasteEncounter <= 10) {
-            print("Waste Value: ");
-            print(randomWasteEncounter);
-            setState(() {
-              waste = true;
-            });
+        if (waste == false) {
+          if (petHunger <= 0.5) {
+            int randomWasteEncounter = (Random().nextInt(10) + 1);
+            if (randomWasteEncounter <= 5) {
+              print("Waste Value: ");
+              print(randomWasteEncounter);
+              setState(() {
+                waste = true;
+              });
+            }
           }
         }
         // Happiness Loop
@@ -168,16 +171,21 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
         }
 
         // Item/Gift Loop
-        int randomItemEncounter = (Random().nextInt(2000) + 1);
-        if (randomItemEncounter <= 5) {
-          print("////////////////////////");
-          print("////////////////////////");
-          print("Item Value: ");
-          print(randomItemEncounter);
-          print("////////////////////////");
-          print("////////////////////////");
+        int randomEncounter = (Random().nextInt(2000) + 1);
+        if (randomEncounter <= 5) {
           setState(() {
             itemActive = true;
+          });
+        }
+
+        // Mood Loop
+        if (petHunger <= minimumModifier) {
+          setState(() {
+            petMood == 'hungry';
+          });
+        } else {
+          setState(() {
+            petMood == '';
           });
         }
       }
@@ -189,6 +197,7 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
       if (hatchCount < 3) {
         setState(() {
           hatchCount++;
+          audioHatch.play();
           if (hatchCount == 0) {
             hatchMsg = 'Hatch me!';
           } else if (hatchCount == 1) {
@@ -202,6 +211,7 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
       } else if (hatchCount == 3) {
         setState(() {
           petType = 'octo-fox';
+          audioSpawn.play();
         });
       }
     }
@@ -241,10 +251,10 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
       setState(() {
         audioUI.play();
         eating = true;
-        Future.delayed(const Duration(milliseconds: 3000)).then((_) {
-          eating = false;
+        Future.delayed(const Duration(milliseconds: 2000)).then((_) {
           petHunger = 1.0;
           audioFull.play();
+          eating = false;
         });
       });
     }
@@ -258,63 +268,103 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
 
   showWaste() {
     if (waste == true) {
-      return InkWell(
-        onTap: () {
-          actionCleanWaste();
-        },
+      return Positioned(
+        bottom: 0,
+        left: 0,
+        // left: -MediaQuery.of(context).size.width * 0.25,
+        child: SizedBox(
+          height: MediaQuery.of(context).size.width * 0.4,
+          width: MediaQuery.of(context).size.width * 0.4,
+          child: InkWell(
+            onTap: () {
+              actionCleanWaste();
+            },
+            child: AnimatedSwitcher(
+              duration: Duration(milliseconds: gameTickerDuration),
+              child: Image.asset(
+                wasteSprites[gameTicker % wasteSprites.length],
+                fit: BoxFit.fitHeight,
+              ),
+            ),
+          ),
+        ),
+      );
+    } else {
+      return Positioned(
+        child: Container(),
+      );
+    }
+  }
+
+  showItem() {
+    if (itemActive == true) {
+      return Positioned(
+        bottom: 0,
+        right: 0,
+        child: InkWell(
+          onTap: () {
+            actionCollectItem();
+          },
+          child: SizedBox(
+            width: MediaQuery.of(context).size.width * 0.4,
+            child: AnimatedSwitcher(
+              duration: Duration(milliseconds: gameTickerDuration),
+              child: Container(
+                color: Colors.red,
+                child: Image.asset(
+                  wasteSprites[gameTicker % wasteSprites.length],
+                  fit: BoxFit.fitWidth,
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    } else {
+      return Positioned(
+        child: Container(),
+      );
+    }
+  }
+
+  petEmote(String petMood) {
+    if (petMood != '') {
+      return Positioned(
+        bottom: MediaQuery.of(context).size.width * 0.35,
+        left: 0,
+        right: 0,
+        child: Image.asset(
+          'assets/images/emote_$petMood.png',
+          fit: BoxFit.fitWidth,
+        ),
+      );
+    } else {
+      return Positioned(
+        bottom: MediaQuery.of(context).size.width * 0.35,
+        left: 0,
+        right: 0,
+        child: Container(),
+      );
+    }
+  }
+
+  showFood() {
+    if (eating == true) {
+      return Positioned(
+        bottom: 0,
         child: SizedBox(
           width: MediaQuery.of(context).size.width * 0.4,
           child: AnimatedSwitcher(
             duration: Duration(milliseconds: gameTickerDuration),
             child: Image.asset(
-              wasteSprites[gameTicker % wasteSprites.length],
+              fruitSprites[gameTicker % fruitSprites.length],
               fit: BoxFit.fitWidth,
             ),
           ),
         ),
       );
     } else {
-      return Container();
-    }
-  }
-
-  petEmote(String petMood) {
-    return Positioned(
-      left: MediaQuery.of(context).size.width * 0.3,
-      right: MediaQuery.of(context).size.width * 0.3,
-      child: petHealth < 0.5
-          ? SizedBox(
-              child: Image.asset(
-                'assets/images/emote_hungry.png',
-                fit: BoxFit.fitWidth,
-              ),
-            )
-          : Container(),
-    );
-  }
-
-  showItem() {
-    if (itemActive == true) {
-      return InkWell(
-        onTap: () {
-          actionCollectItem();
-        },
-        child: SizedBox(
-          width: MediaQuery.of(context).size.width * 0.4,
-          child: AnimatedSwitcher(
-            duration: Duration(milliseconds: gameTickerDuration),
-            child: Container(
-              color: Colors.red,
-              child: Image.asset(
-                wasteSprites[gameTicker % wasteSprites.length],
-                fit: BoxFit.fitWidth,
-              ),
-            ),
-          ),
-        ),
-      );
-    } else {
-      return Container();
+      return Positioned(child: Container());
     }
   }
 
@@ -331,64 +381,45 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
           ),
         ),
         child: SafeArea(
-          child: Stack(
-            children: [
-              Column(
+          child: Align(
+            alignment: Alignment.center,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(
+                minWidth: 400.0,
+                maxWidth: 500.0,
+              ),
+              child: Stack(
+                clipBehavior: Clip.none,
+                alignment: Alignment.center,
                 children: [
-                  UserInterfaceWidget(
-                    petType: petType,
-                    petDob: petDob,
-                    petHunger: petHunger,
-                    petHappiness: petHappiness,
-                    petHealth: petHealth,
-                    petLevel: petLevel,
-                  ),
-                  Expanded(
-                    child: Stack(
-                      clipBehavior: Clip.none,
-                      children: [
-                        GestureDetector(
-                          onTap: () {
-                            actionCheckEmotion();
-                          },
-                          child: Stack(
-                            children: [
-                              SizedBox(
-                                height: MediaQuery.of(context).size.height,
-                                child: Center(
-                                    child: petType == 'octo-egg'
-                                        ? Column(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.center,
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.center,
-                                            children: [
-                                              SizedBox(
-                                                width: MediaQuery.of(context)
-                                                        .size
-                                                        .width *
-                                                    0.4,
-                                                child: AnimatedSwitcher(
-                                                  duration: Duration(
-                                                      milliseconds:
-                                                          gameTickerDuration),
-                                                  child: Image.asset(
-                                                    eggSprites[gameTicker %
-                                                        eggSprites.length],
-                                                    fit: BoxFit.fitWidth,
-                                                  ),
-                                                ),
-                                              ),
-                                              Text(
-                                                hatchMsg,
-                                                style: const TextStyle(
-                                                  fontFamily: 'EarlyGameboy',
-                                                  fontSize: 20.0,
-                                                ),
-                                              )
-                                            ],
-                                          )
-                                        : SizedBox(
+                  Column(
+                    children: [
+                      UserInterfaceWidget(
+                        petType: petType,
+                        petDob: petDob,
+                        petHunger: petHunger,
+                        petHappiness: petHappiness,
+                        petHealth: petHealth,
+                        petLevel: petLevel,
+                      ),
+                      Expanded(
+                        child: Stack(
+                          alignment: Alignment.center,
+                          clipBehavior: Clip.none,
+                          children: [
+                            GestureDetector(
+                              onTap: () {
+                                actionCheckEmotion();
+                              },
+                              child: Expanded(
+                                child: petType == 'octo-egg'
+                                    ? Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.center,
+                                        children: [
+                                          SizedBox(
                                             width: MediaQuery.of(context)
                                                     .size
                                                     .width *
@@ -398,137 +429,133 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
                                                   milliseconds:
                                                       gameTickerDuration),
                                               child: Image.asset(
-                                                petSprites[gameTicker %
-                                                    petSprites.length],
+                                                eggSprites[gameTicker %
+                                                    eggSprites.length],
                                                 fit: BoxFit.fitWidth,
                                               ),
                                             ),
-                                          )),
-                              ),
-                              petEmote('hungry'),
-                              Positioned(
-                                left: MediaQuery.of(context).size.width * 0.3,
-                                right: MediaQuery.of(context).size.width * 0.3,
-                                child: petHealth < 0.5
-                                    ? SizedBox(
-                                        child: Image.asset(
-                                          'assets/images/emote_hungry.png',
-                                          fit: BoxFit.fitWidth,
-                                        ),
+                                          ),
+                                          Text(
+                                            hatchMsg,
+                                            style: const TextStyle(
+                                              fontFamily: 'EarlyGameboy',
+                                              fontSize: 20.0,
+                                            ),
+                                          )
+                                        ],
                                       )
-                                    : Container(),
+                                    : SizedBox(
+                                        width:
+                                            MediaQuery.of(context).size.width *
+                                                0.4,
+                                        child: Stack(
+                                          alignment: Alignment.center,
+                                          clipBehavior: Clip.none,
+                                          children: [
+                                            AnimatedSwitcher(
+                                              duration: Duration(
+                                                  milliseconds:
+                                                      gameTickerDuration),
+                                              child: Image.asset(
+                                                petSprites[gameTicker %
+                                                    petSprites.length],
+                                                fit: BoxFit.fitWidth,
+                                                alignment: Alignment.center,
+                                              ),
+                                            ),
+                                            petEmote(petMood),
+                                          ],
+                                        ),
+                                      ),
                               ),
-                              Positioned(
-                                bottom: 0,
-                                left: 0,
-                                child: showWaste(),
-                              ),
-                              Positioned(
-                                bottom: 0,
-                                right: 0,
-                                child: showItem(),
-                              ),
-                            ],
-                          ),
+                            ),
+                            showWaste(),
+                            showItem(),
+                            showFood(),
+                          ],
                         ),
-                        eating
-                            ? Positioned(
-                                bottom: 0,
-                                left: MediaQuery.of(context).size.width * 0.3,
-                                right: MediaQuery.of(context).size.width * 0.3,
-                                child: SizedBox(
-                                  child: AnimatedSwitcher(
-                                    duration:
-                                        const Duration(milliseconds: 4000),
-                                    child: Image.asset(
-                                      fruitSprites[
-                                          gameTicker % fruitSprites.length],
-                                      fit: BoxFit.fitWidth,
-                                      gaplessPlayback: true,
+                      ),
+                      Container(
+                        padding: const EdgeInsets.all(5.0),
+                        child: petType != 'octo-egg'
+                            ? Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Expanded(
+                                    child: TextButton(
+                                      onPressed: () {
+                                        actionFeed();
+                                      },
+                                      child: const FittedBox(
+                                        fit: BoxFit.scaleDown,
+                                        child: Text(
+                                          "Feed",
+                                        ),
+                                      ),
                                     ),
                                   ),
-                                ),
+                                  const SizedBox(width: 5),
+                                  Expanded(
+                                    child: TextButton(
+                                      onPressed: () {
+                                        actionPlay();
+                                      },
+                                      child: const FittedBox(
+                                        fit: BoxFit.scaleDown,
+                                        child: Text(
+                                          "Play",
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 5),
+                                  Expanded(
+                                    child: TextButton(
+                                      onPressed: () {
+                                        actionHideMenu();
+                                      },
+                                      child: const FittedBox(
+                                        fit: BoxFit.scaleDown,
+                                        child: Text(
+                                          "Menu",
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               )
-                            : Container(),
-                      ],
-                    ),
+                            : Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Expanded(
+                                    child: TextButton(
+                                      onPressed: () {
+                                        actionHatchEgg();
+                                      },
+                                      child: const FittedBox(
+                                        fit: BoxFit.scaleDown,
+                                        child: Text(
+                                          "Hatch!",
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                      ),
+                    ],
                   ),
-                  Container(
-                    padding: const EdgeInsets.all(5.0),
-                    child: petType != 'octo-egg'
-                        ? Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              Expanded(
-                                child: TextButton(
-                                  onPressed: () {
-                                    actionFeed();
-                                  },
-                                  child: const FittedBox(
-                                    fit: BoxFit.scaleDown,
-                                    child: Text(
-                                      "Feed",
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 5),
-                              Expanded(
-                                child: TextButton(
-                                  onPressed: () {
-                                    actionPlay();
-                                  },
-                                  child: const FittedBox(
-                                    fit: BoxFit.scaleDown,
-                                    child: Text(
-                                      "Play",
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 5),
-                              Expanded(
-                                child: TextButton(
-                                  onPressed: () {
-                                    actionHideMenu();
-                                  },
-                                  child: const FittedBox(
-                                    fit: BoxFit.scaleDown,
-                                    child: Text(
-                                      "Menu",
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          )
-                        : Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              Expanded(
-                                child: TextButton(
-                                  onPressed: () {
-                                    actionHatchEgg();
-                                  },
-                                  child: const FittedBox(
-                                    fit: BoxFit.scaleDown,
-                                    child: Text(
-                                      "Hatch!",
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                  ),
+                  showStats
+                      ? MenuWidget(
+                          hideMenu: actionHideMenu, showStats: showStats)
+                      : Container()
                 ],
               ),
-              showStats
-                  ? MenuWidget(hideMenu: actionHideMenu, showStats: showStats)
-                  : Container()
-            ],
+            ),
           ),
         ),
       ),
