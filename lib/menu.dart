@@ -40,7 +40,7 @@ class _MenuWidgetState extends State<MenuWidget> {
                     color: Color(0xFF222222),
                   ),
                 ),
-                child: Text(
+                child: const Text(
                   "Menu",
                   style: TextStyle(fontSize: 24),
                 ),

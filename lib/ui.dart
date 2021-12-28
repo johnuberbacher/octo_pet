@@ -6,10 +6,16 @@ class UserInterfaceWidget extends StatefulWidget {
   final double petHunger;
   final double petHealth;
   final double petHappiness;
+  final String petType;
+  final String petDob;
+  final int petLevel;
   const UserInterfaceWidget({
     required this.petHunger,
     required this.petHealth,
     required this.petHappiness,
+    required this.petType,
+    required this.petDob,
+    required this.petLevel,
   });
 
   @override
@@ -48,7 +54,7 @@ class _UserInterfaceWidgetState extends State<UserInterfaceWidget> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    "Octo-Fox",
+                    widget.petType,
                     style: TextStyle(fontSize: 26),
                   ),
                   Column(
@@ -56,11 +62,11 @@ class _UserInterfaceWidgetState extends State<UserInterfaceWidget> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        "12/26/21",
+                        widget.petDob,
                         style: TextStyle(fontSize: 12),
                       ),
                       Text(
-                        "Lvl. 1",
+                        "Lvl. " + widget.petLevel.toString(),
                         style: TextStyle(fontSize: 12),
                       ),
                     ],
