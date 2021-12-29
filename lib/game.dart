@@ -27,9 +27,13 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
   int hatchCount = 0;
   int petLevel = 0;
   final eggSprites = ['assets/images/egg1.png', 'assets/images/egg2.png'];
-  final petSprites = [
+  final petFoxSprites = [
     'assets/images/pet1_layer1.png',
     'assets/images/pet1_layer2.png'
+  ];
+  final petBatSprites = [
+    'assets/images/pet2_layer1.png',
+    'assets/images/pet2_layer2.png'
   ];
   final wasteSprites = ['assets/images/waste1.png', 'assets/images/waste2.png'];
   final fruitSprites = [
@@ -72,7 +76,6 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
 
-    // These are the callbacks
     switch (state) {
       case AppLifecycleState.resumed:
         saveLocalStorage();
@@ -238,10 +241,19 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
           }
         });
       } else if (hatchCount == 3) {
-        setState(() {
-          petType = 'octo-fox';
-          audioSpawn.play();
-        });
+        int randomPetType = (Random().nextInt(10) + 1);
+        print('PET SPAWN VALUE IS');
+        print(randomPetType);
+        audioSpawn.play();
+        if (randomPetType <= 5) {
+          setState(() {
+            petType = 'octo-fox';
+          });
+        } else {
+          setState(() {
+            petType = 'octo-bat';
+          });
+        }
       }
     }
   }
@@ -293,6 +305,29 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
     setState(() {
       petHappiness = 1.0;
     });
+  }
+
+  showPet() {
+    if (petType == 'octo-fox') {
+      return Image.asset(
+        petFoxSprites[gameTicker % petFoxSprites.length],
+        fit: BoxFit.fitWidth,
+        alignment: Alignment.center,
+      );
+    } else if (petType == 'octo-bat') {
+      return Image.asset(
+        petBatSprites[gameTicker % petBatSprites.length],
+        fit: BoxFit.fitWidth,
+        alignment: Alignment.center,
+      );
+    } else {
+      return Image.asset(
+        eggSprites[gameTicker % eggSprites.length],
+        fit: BoxFit.fitWidth,
+        alignment: Alignment.center,
+      );
+    }
+    ;
   }
 
   showWaste() {
@@ -489,13 +524,7 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
                                                     duration: Duration(
                                                         milliseconds:
                                                             gameTickerDuration),
-                                                    child: Image.asset(
-                                                      petSprites[gameTicker %
-                                                          petSprites.length],
-                                                      fit: BoxFit.fitWidth,
-                                                      alignment:
-                                                          Alignment.center,
-                                                    ),
+                                                    child: showPet(),
                                                   ),
                                                   petEmote(petMood),
                                                 ],
@@ -511,7 +540,7 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
                         ),
                       ),
                       Container(
-                        padding: const EdgeInsets.all(5.0),
+                        padding: const EdgeInsets.all(10.0),
                         child: petType != 'octo-egg'
                             ? Row(
                                 mainAxisAlignment:
@@ -554,7 +583,7 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
                                       child: const FittedBox(
                                         fit: BoxFit.scaleDown,
                                         child: Text(
-                                          "Menu",
+                                          "History",
                                         ),
                                       ),
                                     ),

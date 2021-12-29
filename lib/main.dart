@@ -18,14 +18,14 @@ class MyApp extends StatelessWidget {
             onPrimary: const Color(0xFF222222),
             padding: const EdgeInsets.symmetric(
               vertical: 20.0,
-              horizontal: 10.0,
+              horizontal: 14.0,
             ),
             shape: const RoundedRectangleBorder(
               borderRadius: BorderRadius.all(Radius.circular(0)),
             ),
             textStyle: const TextStyle(
               fontFamily: 'EarlyGameboy',
-              fontSize: 18.0,
+              fontSize: 15.0,
             ),
             side: const BorderSide(
               width: 6.0,

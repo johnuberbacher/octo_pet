@@ -16,52 +16,153 @@ class _MenuWidgetState extends State<MenuWidget> {
   @override
   Widget build(BuildContext context) {
     return Positioned(
-      top: 5,
-      left: 5,
-      right: 5,
-      bottom: 5,
-      child: Container(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Expanded(
-              child: Container(
+      top: 10,
+      left: 10,
+      right: 10,
+      bottom: 10,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Expanded(
+            child: Container(
                 padding: const EdgeInsets.all(
                   15.0,
                 ),
                 margin: const EdgeInsets.only(
-                  bottom: 5.0,
+                  bottom: 10.0,
                 ),
                 decoration: BoxDecoration(
-                  color: Color(0xFF59734a).withOpacity(0.95),
+                  color: const Color(0xFF59734a).withOpacity(0.95),
                   border: Border.all(
                     width: 6.0,
-                    color: Color(0xFF222222),
+                    color: const Color(0xFF222222),
                   ),
                 ),
-                child: const Text(
-                  "Menu",
-                  style: TextStyle(fontSize: 24),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(
+                        top: 30.0,
+                        bottom: 30.0,
+                      ),
+                      child: Text(
+                        "History",
+                        style: TextStyle(fontSize: 24),
+                      ),
+                    ),
+                    Expanded(
+                      child: Wrap(
+                        direction: Axis.horizontal,
+                        spacing: 30.0,
+                        runAlignment: WrapAlignment.start,
+                        runSpacing: 30.0,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: [
+                          Column(
+                            children: [
+                              SizedBox(
+                                width: MediaQuery.of(context).size.width * 0.33,
+                                child: Image.asset(
+                                  'assets/images/pet1_layer1.png',
+                                  fit: BoxFit.fitWidth,
+                                ),
+                              ),
+                              Column(
+                                children: [
+                                  Text(
+                                    "OCTO-FOX",
+                                    style: TextStyle(fontSize: 18),
+                                  ),
+                                  Text(
+                                    "12/12/2020",
+                                    style: TextStyle(fontSize: 10),
+                                  ),
+                                  Text(
+                                    "12/12/2020",
+                                    style: TextStyle(fontSize: 10),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                          Column(
+                            children: [
+                              SizedBox(
+                                width: MediaQuery.of(context).size.width * 0.33,
+                                child: Image.asset(
+                                  'assets/images/pet1_layer1.png',
+                                  fit: BoxFit.fitWidth,
+                                ),
+                              ),
+                              Column(
+                                children: [
+                                  Text(
+                                    "OCTO-FOX",
+                                    style: TextStyle(fontSize: 18),
+                                  ),
+                                  Text(
+                                    "12/12/2020",
+                                    style: TextStyle(fontSize: 10),
+                                  ),
+                                  Text(
+                                    "12/12/2020",
+                                    style: TextStyle(fontSize: 10),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                          Column(
+                            children: [
+                              SizedBox(
+                                width: MediaQuery.of(context).size.width * 0.33,
+                                child: Image.asset(
+                                  'assets/images/pet1_layer1.png',
+                                  fit: BoxFit.fitWidth,
+                                ),
+                              ),
+                              Column(
+                                children: [
+                                  Text(
+                                    "OCTO-FOX",
+                                    style: TextStyle(fontSize: 18),
+                                  ),
+                                  Text(
+                                    "12/12/2020",
+                                    style: TextStyle(fontSize: 10),
+                                  ),
+                                  Text(
+                                    "12/12/2020",
+                                    style: TextStyle(fontSize: 10),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                )),
+          ),
+          SizedBox(
+            width: double.infinity,
+            child: TextButton(
+              onPressed: () {
+                widget.hideMenu();
+              },
+              child: const FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  "Back",
                 ),
               ),
             ),
-            SizedBox(
-              width: double.infinity,
-              child: TextButton(
-                onPressed: () {
-                  widget.hideMenu();
-                },
-                child: const FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Text(
-                    "Back",
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

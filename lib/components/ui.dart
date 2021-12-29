@@ -29,7 +29,7 @@ class _UserInterfaceWidgetState extends State<UserInterfaceWidget> {
     } else {
       return Padding(
         padding: const EdgeInsets.all(
-          5.0,
+          10.0,
         ),
         child: Container(
           padding: const EdgeInsets.all(
