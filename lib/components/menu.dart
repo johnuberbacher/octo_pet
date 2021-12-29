@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 
 class MenuWidget extends StatefulWidget {
   Function hideMenu;
-  MenuWidget({Key? key, required this.hideMenu, showStats}) : super(key: key);
+  MenuWidget({Key? key, required this.hideMenu, showMenu, petHistory}) : super(key: key);
 
   @override
   _MenuWidgetState createState() => _MenuWidgetState();
@@ -66,8 +66,9 @@ class _MenuWidgetState extends State<MenuWidget> {
                               SizedBox(
                                 width: MediaQuery.of(context).size.width * 0.33,
                                 child: Image.asset(
-                                  'assets/images/pet1_layer1.png',
+                                  'assets/images/pet2_layer1.png',
                                   fit: BoxFit.fitWidth,
+                                  alignment: Alignment.bottomCenter,
                                 ),
                               ),
                               Column(
@@ -95,6 +96,7 @@ class _MenuWidgetState extends State<MenuWidget> {
                                 child: Image.asset(
                                   'assets/images/pet1_layer1.png',
                                   fit: BoxFit.fitWidth,
+                                  alignment: Alignment.bottomCenter,
                                 ),
                               ),
                               Column(
@@ -122,6 +124,7 @@ class _MenuWidgetState extends State<MenuWidget> {
                                 child: Image.asset(
                                   'assets/images/pet1_layer1.png',
                                   fit: BoxFit.fitWidth,
+                                  alignment: Alignment.bottomCenter,
                                 ),
                               ),
                               Column(

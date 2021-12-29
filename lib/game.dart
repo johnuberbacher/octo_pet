@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:ffi';
 import 'dart:math';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -18,23 +19,18 @@ class Game extends StatefulWidget {
 class _GameState extends State<Game> with WidgetsBindingObserver {
   final LocalStorage storage = LocalStorage('petData.json');
   String petType = 'octo-egg';
+  String petIndex = '0';
   String petDob = '';
-  double petHunger = 0.1;
+  int petLevel = 1;
+  double petHunger = 1.0;
   double petHappiness = 1.0;
   double petHealth = 1.0;
   String petMood = '';
-  String hatchMsg = 'Hatch me!';
-  int hatchCount = 0;
-  int petLevel = 0;
+  String petHistory = '';
   final eggSprites = ['assets/images/egg1.png', 'assets/images/egg2.png'];
-  final petFoxSprites = [
-    'assets/images/pet1_layer1.png',
-    'assets/images/pet1_layer2.png'
-  ];
-  final petBatSprites = [
-    'assets/images/pet2_layer1.png',
-    'assets/images/pet2_layer2.png'
-  ];
+  final petFoxSprites = ['assets/images/pet1_layer1.png', 'assets/images/pet1_layer2.png'];
+  final petBatSprites = ['assets/images/pet2_layer1.png', 'assets/images/pet2_layer2.png'];
+  final petDogSprites = ['assets/images/pet3_layer1.png', 'assets/images/pet3_layer2.png'];
   final wasteSprites = ['assets/images/waste1.png', 'assets/images/waste2.png'];
   final fruitSprites = [
     'assets/images/fruit1.png',
@@ -42,10 +38,11 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
     'assets/images/fruit3.png',
     'assets/images/fruit4.png',
   ];
-  bool showStats = false;
+  String hatchMsg = 'Hatch me!';
+  int hatchCount = 0;
+  bool showMenu = false;
   bool eating = false;
   bool waste = false;
-  bool itemActive = false;
 
   int gameTicker = 0;
   int gameTickerDuration = 1000;
@@ -60,15 +57,12 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
     super.initState();
     loadData();
     gameLoop();
-    // Add the observer.
     WidgetsBinding.instance!.addObserver(this);
   }
 
   @override
   void dispose() {
-    // Remove the observer
     WidgetsBinding.instance!.removeObserver(this);
-
     super.dispose();
   }
 
@@ -98,54 +92,35 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
 
   void loadData() async {
     await storage.ready;
-    // If you have an egg or are a new player
-    if (storage.getItem('petType') == 'octo-egg' ||
-        storage.getItem('petType') == null) {
+    if (storage.getItem('petType') == 'octo-egg' || storage.getItem('petType') == null) {
       storage.setItem('petType', 'octo-egg');
-      storage.setItem(
-        'petDob',
-        DateTime.now()
-            .toString()
-            .substring(0, 10)
-            .replaceAll(RegExp(r'[^\w\s]+'), '/'),
-      );
-      storage.setItem('petHunger', 1.0);
-      storage.setItem('petHappiness', 1.0);
-      storage.setItem('petHealth', 1.0);
-      storage.setItem('petLevel', 0);
-      print("NO storage found");
-      await storage.ready;
-      petType = storage.getItem('petType');
-      petDob = storage.getItem('petDob');
-      petHunger = storage.getItem('petHunger');
-      petHappiness = storage.getItem('petHappiness');
-      petHealth = storage.getItem('petHealth');
-      petLevel = storage.getItem('petLevel');
-      print("Saved new data to local storage");
     } else {
-      print("Previous Local storage found");
-      await storage.ready;
-      petType = storage.getItem('petType');
-      petDob = storage.getItem('petDob');
-      petHunger = storage.getItem('petHunger');
-      petHappiness = storage.getItem('petHappiness');
-      petHealth = storage.getItem('petHealth');
-      petLevel = storage.getItem('petLevel');
-      print("Loading local storage to app data");
+      print("Local sotrage data has been found, loading now...");
+      loadLocalStorage();
+      print("Local data has been loaded!");
     }
   }
 
   void saveLocalStorage() async {
     await storage.ready;
-    storage.setItem('petType', petType);
-    storage.setItem(
-      'petDob',
-      petDob,
-    );
     storage.setItem('petHunger', petHunger);
     storage.setItem('petHappiness', petHappiness);
     storage.setItem('petHealth', petHealth);
     storage.setItem('petLevel', petLevel);
+  }
+
+  void loadLocalStorage() async {
+    await storage.ready;
+    petType = storage.getItem('petType');
+    petIndex = storage.getItem('petIndex');
+    petDob = storage.getItem('petDob');
+    petHunger = storage.getItem('petHunger');
+    petHappiness = storage.getItem('petHappiness');
+    petHealth = storage.getItem('petHealth');
+    petLevel = storage.getItem('petLevel');
+    petHistory = storage.getItem('petHistory');
+    print("petHistory:");
+    print(petHistory);
   }
 
   void gameLoop() {
@@ -167,8 +142,8 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
         // Waste Loop
         if (waste == false) {
           if (petHunger <= 0.5) {
-            int randomWasteEncounter = (Random().nextInt(10) + 1);
-            if (randomWasteEncounter <= 5) {
+            int randomWasteEncounter = (Random().nextInt(100) + 1);
+            if (randomWasteEncounter <= 20) {
               print("Waste Value: ");
               print(randomWasteEncounter);
               setState(() {
@@ -202,14 +177,6 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
           });
         }
 
-        // Item/Gift Loop
-        int randomEncounter = (Random().nextInt(2000) + 1);
-        if (randomEncounter <= 5) {
-          setState(() {
-            itemActive = true;
-          });
-        }
-
         // Mood Loop
         if (petHunger <= minimumModifier) {
           setState(() {
@@ -226,7 +193,7 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
 
   actionHatchEgg() {
     if (petType == 'octo-egg') {
-      if (hatchCount < 3) {
+      if (hatchCount <= 3) {
         setState(() {
           hatchCount++;
           audioHatch.play();
@@ -240,36 +207,46 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
             hatchMsg = 'Here I come!';
           }
         });
-      } else if (hatchCount == 3) {
-        int randomPetType = (Random().nextInt(10) + 1);
-        print('PET SPAWN VALUE IS');
-        print(randomPetType);
-        audioSpawn.play();
-        if (randomPetType <= 5) {
-          setState(() {
-            petType = 'octo-fox';
-          });
-        } else {
-          setState(() {
-            petType = 'octo-bat';
-          });
+      } else if (hatchCount == 4) {
+        int randomPetIndex = Random().nextInt(999999) + 100000;
+        int randomPetType = (Random().nextInt(100) + 1);
+        String petDateOfBirth =
+            DateTime.now().toString().substring(0, 10).replaceAll(RegExp(r'[^\w\s]+'), '/');
+        String newPetType = '';
+        if (randomPetType <= 33) {
+          newPetType = 'octo-fox';
+        } else if (randomPetType >= 34 && randomPetType <= 66) {
+          newPetType = 'octo-bat';
+        } else if (randomPetType >= 67) {
+          newPetType = 'octo-dog';
         }
+        print("No saved data found, creating now...");
+        storage.setItem('petIndex', randomPetIndex.toString());
+        storage.setItem(
+          'petDob',
+          petDateOfBirth,
+        );
+        storage.setItem('petHunger', 1.0);
+        storage.setItem('petHappiness', 1.0);
+        storage.setItem('petHealth', 1.0);
+        storage.setItem('petLevel', 1);
+        storage.setItem(
+            'petHistory', '${newPetType}-${randomPetIndex.toString()}-${petDateOfBirth},');
+        storage.setItem('petType', newPetType);
+        print("New Egg has been saved to local storage!");
+        print("pet history:");
+        print('${newPetType},${randomPetIndex.toString()},${petDateOfBirth},');
+        loadLocalStorage();
+        audioSpawn.play();
       }
     }
   }
 
-  actionCheckEmotion() async {
+  actionCheckEmotion() {
     print("Here");
     int emotionCount = 0;
     setState(() {
       emotionCount++;
-    });
-  }
-
-  actionCollectItem() {
-    setState(() {
-      audioFull.play();
-      itemActive = false;
     });
   }
 
@@ -283,7 +260,7 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
   actionHideMenu() {
     setState(() {
       audioUI.play();
-      showStats = !showStats;
+      showMenu = !showMenu;
     });
   }
 
@@ -320,6 +297,12 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
         fit: BoxFit.fitWidth,
         alignment: Alignment.center,
       );
+    } else if (petType == 'octo-dog') {
+      return Image.asset(
+        petDogSprites[gameTicker % petDogSprites.length],
+        fit: BoxFit.fitWidth,
+        alignment: Alignment.center,
+      );
     } else {
       return Image.asset(
         eggSprites[gameTicker % eggSprites.length],
@@ -327,7 +310,6 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
         alignment: Alignment.center,
       );
     }
-    ;
   }
 
   showWaste() {
@@ -348,37 +330,6 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
               child: Image.asset(
                 wasteSprites[gameTicker % wasteSprites.length],
                 fit: BoxFit.fitHeight,
-              ),
-            ),
-          ),
-        ),
-      );
-    } else {
-      return Positioned(
-        child: Container(),
-      );
-    }
-  }
-
-  showItem() {
-    if (itemActive == true) {
-      return Positioned(
-        bottom: 0,
-        right: 0,
-        child: InkWell(
-          onTap: () {
-            actionCollectItem();
-          },
-          child: SizedBox(
-            width: MediaQuery.of(context).size.width * 0.4,
-            child: AnimatedSwitcher(
-              duration: Duration(milliseconds: gameTickerDuration),
-              child: Container(
-                color: Colors.red,
-                child: Image.asset(
-                  wasteSprites[gameTicker % wasteSprites.length],
-                  fit: BoxFit.fitWidth,
-                ),
               ),
             ),
           ),
@@ -417,6 +368,7 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
       return Positioned(
         bottom: 0,
         child: SizedBox(
+          height: MediaQuery.of(context).size.width * 0.4,
           width: MediaQuery.of(context).size.width * 0.4,
           child: AnimatedSwitcher(
             duration: Duration(milliseconds: gameTickerDuration),
@@ -471,7 +423,8 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
                           alignment: Alignment.center,
                           clipBehavior: Clip.none,
                           children: [
-                            GestureDetector(
+                            Center(
+                              child: GestureDetector(
                                 onTap: () {
                                   actionCheckEmotion();
                                 },
@@ -481,23 +434,16 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
                                     Expanded(
                                       child: petType == 'octo-egg'
                                           ? Column(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.center,
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.center,
+                                              mainAxisAlignment: MainAxisAlignment.center,
+                                              crossAxisAlignment: CrossAxisAlignment.center,
                                               children: [
                                                 SizedBox(
-                                                  width: MediaQuery.of(context)
-                                                          .size
-                                                          .width *
-                                                      0.4,
+                                                  width: MediaQuery.of(context).size.width * 0.4,
                                                   child: AnimatedSwitcher(
-                                                    duration: Duration(
-                                                        milliseconds:
-                                                            gameTickerDuration),
+                                                    duration:
+                                                        Duration(milliseconds: gameTickerDuration),
                                                     child: Image.asset(
-                                                      eggSprites[gameTicker %
-                                                          eggSprites.length],
+                                                      eggSprites[gameTicker % eggSprites.length],
                                                       fit: BoxFit.fitWidth,
                                                     ),
                                                   ),
@@ -512,18 +458,14 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
                                               ],
                                             )
                                           : SizedBox(
-                                              width: MediaQuery.of(context)
-                                                      .size
-                                                      .width *
-                                                  0.4,
+                                              width: MediaQuery.of(context).size.width * 0.4,
                                               child: Stack(
                                                 alignment: Alignment.center,
                                                 clipBehavior: Clip.none,
                                                 children: [
                                                   AnimatedSwitcher(
-                                                    duration: Duration(
-                                                        milliseconds:
-                                                            gameTickerDuration),
+                                                    duration:
+                                                        Duration(milliseconds: gameTickerDuration),
                                                     child: showPet(),
                                                   ),
                                                   petEmote(petMood),
@@ -532,9 +474,10 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
                                             ),
                                     ),
                                   ],
-                                )),
+                                ),
+                              ),
+                            ),
                             showWaste(),
-                            showItem(),
                             showFood(),
                           ],
                         ),
@@ -543,8 +486,7 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
                         padding: const EdgeInsets.all(10.0),
                         child: petType != 'octo-egg'
                             ? Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
                                   Expanded(
@@ -591,8 +533,7 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
                                 ],
                               )
                             : Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
                                   Expanded(
@@ -613,9 +554,9 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
                       ),
                     ],
                   ),
-                  showStats
+                  showMenu
                       ? MenuWidget(
-                          hideMenu: actionHideMenu, showStats: showStats)
+                          hideMenu: actionHideMenu, showMenu: showMenu, petHistory: petHistory)
                       : Container()
                 ],
               ),
