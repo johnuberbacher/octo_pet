@@ -3,8 +3,8 @@ import 'dart:convert';
 import 'dart:math';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:octo_pet/ui.dart';
-import 'package:octo_pet/menu.dart';
+import 'package:octo_pet/components/ui.dart';
+import 'package:octo_pet/components/menu.dart';
 import 'package:audiofileplayer/audiofileplayer.dart';
 import 'package:localstorage/localstorage.dart';
 
@@ -75,15 +75,19 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
     // These are the callbacks
     switch (state) {
       case AppLifecycleState.resumed:
+        saveLocalStorage();
         print('saved to local storage');
         break;
       case AppLifecycleState.inactive:
+        saveLocalStorage();
         print('saved to local storage');
         break;
       case AppLifecycleState.paused:
+        saveLocalStorage();
         print('saved to local storage');
         break;
       case AppLifecycleState.detached:
+        saveLocalStorage();
         print('saved to local storage');
         break;
     }
@@ -92,7 +96,8 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
   void loadData() async {
     await storage.ready;
     // If you have an egg or are a new player
-    if (storage.getItem('petType') == 'octo-egg') {
+    if (storage.getItem('petType') == 'octo-egg' ||
+        storage.getItem('petType') == null) {
       storage.setItem('petType', 'octo-egg');
       storage.setItem(
         'petDob',
@@ -105,15 +110,39 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
       storage.setItem('petHappiness', 1.0);
       storage.setItem('petHealth', 1.0);
       storage.setItem('petLevel', 0);
-    } else {
+      print("NO storage found");
       await storage.ready;
       petType = storage.getItem('petType');
       petDob = storage.getItem('petDob');
       petHunger = storage.getItem('petHunger');
       petHappiness = storage.getItem('petHappiness');
       petHealth = storage.getItem('petHealth');
-      petHealth = storage.getItem('petLevel');
+      petLevel = storage.getItem('petLevel');
+      print("Saved new data to local storage");
+    } else {
+      print("Previous Local storage found");
+      await storage.ready;
+      petType = storage.getItem('petType');
+      petDob = storage.getItem('petDob');
+      petHunger = storage.getItem('petHunger');
+      petHappiness = storage.getItem('petHappiness');
+      petHealth = storage.getItem('petHealth');
+      petLevel = storage.getItem('petLevel');
+      print("Loading local storage to app data");
     }
+  }
+
+  void saveLocalStorage() async {
+    await storage.ready;
+    storage.setItem('petType', petType);
+    storage.setItem(
+      'petDob',
+      petDob,
+    );
+    storage.setItem('petHunger', petHunger);
+    storage.setItem('petHappiness', petHappiness);
+    storage.setItem('petHealth', petHealth);
+    storage.setItem('petLevel', petLevel);
   }
 
   void gameLoop() {
@@ -408,67 +437,73 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
                           clipBehavior: Clip.none,
                           children: [
                             GestureDetector(
-                              onTap: () {
-                                actionCheckEmotion();
-                              },
-                              child: Expanded(
-                                child: petType == 'octo-egg'
-                                    ? Column(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.center,
-                                        children: [
-                                          SizedBox(
-                                            width: MediaQuery.of(context)
-                                                    .size
-                                                    .width *
-                                                0.4,
-                                            child: AnimatedSwitcher(
-                                              duration: Duration(
-                                                  milliseconds:
-                                                      gameTickerDuration),
-                                              child: Image.asset(
-                                                eggSprites[gameTicker %
-                                                    eggSprites.length],
-                                                fit: BoxFit.fitWidth,
-                                              ),
-                                            ),
-                                          ),
-                                          Text(
-                                            hatchMsg,
-                                            style: const TextStyle(
-                                              fontFamily: 'EarlyGameboy',
-                                              fontSize: 20.0,
-                                            ),
-                                          )
-                                        ],
-                                      )
-                                    : SizedBox(
-                                        width:
-                                            MediaQuery.of(context).size.width *
-                                                0.4,
-                                        child: Stack(
-                                          alignment: Alignment.center,
-                                          clipBehavior: Clip.none,
-                                          children: [
-                                            AnimatedSwitcher(
-                                              duration: Duration(
-                                                  milliseconds:
-                                                      gameTickerDuration),
-                                              child: Image.asset(
-                                                petSprites[gameTicker %
-                                                    petSprites.length],
-                                                fit: BoxFit.fitWidth,
+                                onTap: () {
+                                  actionCheckEmotion();
+                                },
+                                child: Flex(
+                                  direction: Axis.vertical,
+                                  children: [
+                                    Expanded(
+                                      child: petType == 'octo-egg'
+                                          ? Column(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.center,
+                                              children: [
+                                                SizedBox(
+                                                  width: MediaQuery.of(context)
+                                                          .size
+                                                          .width *
+                                                      0.4,
+                                                  child: AnimatedSwitcher(
+                                                    duration: Duration(
+                                                        milliseconds:
+                                                            gameTickerDuration),
+                                                    child: Image.asset(
+                                                      eggSprites[gameTicker %
+                                                          eggSprites.length],
+                                                      fit: BoxFit.fitWidth,
+                                                    ),
+                                                  ),
+                                                ),
+                                                Text(
+                                                  hatchMsg,
+                                                  style: const TextStyle(
+                                                    fontFamily: 'EarlyGameboy',
+                                                    fontSize: 20.0,
+                                                  ),
+                                                )
+                                              ],
+                                            )
+                                          : SizedBox(
+                                              width: MediaQuery.of(context)
+                                                      .size
+                                                      .width *
+                                                  0.4,
+                                              child: Stack(
                                                 alignment: Alignment.center,
+                                                clipBehavior: Clip.none,
+                                                children: [
+                                                  AnimatedSwitcher(
+                                                    duration: Duration(
+                                                        milliseconds:
+                                                            gameTickerDuration),
+                                                    child: Image.asset(
+                                                      petSprites[gameTicker %
+                                                          petSprites.length],
+                                                      fit: BoxFit.fitWidth,
+                                                      alignment:
+                                                          Alignment.center,
+                                                    ),
+                                                  ),
+                                                  petEmote(petMood),
+                                                ],
                                               ),
                                             ),
-                                            petEmote(petMood),
-                                          ],
-                                        ),
-                                      ),
-                              ),
-                            ),
+                                    ),
+                                  ],
+                                )),
                             showWaste(),
                             showItem(),
                             showFood(),

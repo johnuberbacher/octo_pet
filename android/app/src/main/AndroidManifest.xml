@@ -1,8 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.johnuberbacher.octo_pet">
    <application
-        android:label="octo_pet"
-        android:icon="@mipmap/ic_launcher"
+        android:label="Octo-Pet"
+        android:icon="@mipmap/launcher_icon"
         android:usesCleartextTraffic="true">
         <activity
             android:name=".MainActivity"

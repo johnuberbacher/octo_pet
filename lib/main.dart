@@ -14,7 +14,7 @@ class MyApp extends StatelessWidget {
         textButtonTheme: TextButtonThemeData(
           style: ElevatedButton.styleFrom(
             enableFeedback: false,
-            primary: Color(0xFF58734a), // Button color
+            primary: const Color(0xFF58734a), // Button color
             onPrimary: const Color(0xFF222222),
             padding: const EdgeInsets.symmetric(
               vertical: 20.0,
@@ -39,7 +39,7 @@ class MyApp extends StatelessWidget {
               displayColor: const Color(0xFF222222),
             ),
       ),
-      home: Game(),
+      home: const Game(),
     );
   }
 }
