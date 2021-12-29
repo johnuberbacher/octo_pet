@@ -51,6 +51,7 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
   Audio audioHatch = Audio.load('assets/sfx/hatch.wav');
   Audio audioSpawn = Audio.load('assets/sfx/spawn.wav');
   Audio audioFull = Audio.load('assets/sfx/full.wav');
+  Audio audioPoof = Audio.load('assets/sfx/poof.wav');
 
   @override
   void initState() {
@@ -73,7 +74,7 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
 
     switch (state) {
       case AppLifecycleState.resumed:
-        saveLocalStorage();
+        loadData();
         print('saved to local storage');
         break;
       case AppLifecycleState.inactive:
@@ -112,19 +113,24 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
 
   void loadLocalStorage() async {
     await storage.ready;
-    petType = storage.getItem('petType');
-    petIndex = storage.getItem('petIndex');
-    petDob = storage.getItem('petDob');
-    petHunger = storage.getItem('petHunger');
-    petHappiness = storage.getItem('petHappiness');
-    petHealth = storage.getItem('petHealth');
-    petLevel = storage.getItem('petLevel');
-    petHistory = storage.getItem('petHistory');
-    print("petHistory:");
-    print(petHistory);
+    setState(() {
+      petType = storage.getItem('petType');
+      petIndex = storage.getItem('petIndex');
+      petDob = storage.getItem('petDob');
+      petHunger = storage.getItem('petHunger');
+      petHappiness = storage.getItem('petHappiness');
+      petHealth = storage.getItem('petHealth');
+      petLevel = storage.getItem('petLevel');
+      petHistory = storage.getItem('petHistory');
+    });
   }
 
-  void poof() {
+  void poof() async {
+    audioPoof.play();
+    await storage.ready;
+    String currentPetHistory = storage.getItem('petHistory');
+    String updatedPetHistory = currentPetHistory + '${petType}:${petIndex.toString()}:${petDob}, ';
+    storage.setItem('petHistory', updatedPetHistory);
     petType = 'octo-egg';
     petIndex = '0';
     petDob = '';
@@ -133,6 +139,9 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
     petHappiness = 100;
     petHealth = 100;
     petMood = '';
+    showMenu = false;
+    eating = false;
+    waste = false;
   }
 
   void gameLoop() {
@@ -154,7 +163,7 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
         }
         // Waste Loop
         if (waste == false) {
-          if (petHunger <= 5) {
+          if (petHunger <= 25) {
             int randomWasteEncounter = (Random().nextInt(100) + 1);
             if (randomWasteEncounter <= 15) {
               print("Waste Value: ");
@@ -211,7 +220,7 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
     });
   }
 
-  actionHatchEgg() {
+  actionHatchEgg() async {
     if (petType == 'octo-egg') {
       if (hatchCount < 3) {
         setState(() {
@@ -228,7 +237,7 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
           }
         });
       } else if (hatchCount == 3) {
-        int randomPetIndex = Random().nextInt(999999) + 100000;
+        int randomPetIndex = Random().nextInt(900000) + 100000;
         int randomPetType = (Random().nextInt(100) + 1);
         String petDateOfBirth =
             DateTime.now().toString().substring(0, 10).replaceAll(RegExp(r'[^\w\s]+'), '/');
@@ -241,6 +250,7 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
           newPetType = 'octo-dog';
         }
         print("No saved data found, creating now...");
+        await storage.ready;
         storage.setItem('petIndex', randomPetIndex.toString());
         storage.setItem(
           'petDob',
@@ -250,12 +260,20 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
         storage.setItem('petHappiness', 100);
         storage.setItem('petHealth', 100);
         storage.setItem('petLevel', 1);
-        storage.setItem(
-            'petHistory', '${newPetType}:${randomPetIndex.toString()}:${petDateOfBirth},');
-        storage.setItem('petType', newPetType);
+
+        if (storage.getItem('petHistory') == null) {
+          storage.setItem('petHistory', '');
+          print('NO NO NO pet history found:');
+          print(storage.getItem('petHistory'));
+        } else {
+          print('YES YES YES pet history found:');
+          print(storage.getItem('petHistory'));
+        }
         print("New Egg has been saved to local storage!");
         print("History: ${newPetType},${randomPetIndex.toString()},${petDateOfBirth},");
+        storage.setItem('petType', newPetType);
         loadLocalStorage();
+        hatchCount = 0;
         audioSpawn.play();
       }
     }
@@ -278,6 +296,7 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
   }
 
   actionHideMenu() {
+    print(petHistory);
     setState(() {
       audioUI.play();
       showMenu = !showMenu;

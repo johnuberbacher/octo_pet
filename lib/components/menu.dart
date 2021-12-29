@@ -1,4 +1,4 @@
-import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
@@ -14,7 +14,7 @@ class MenuWidget extends StatefulWidget {
 
 class _MenuWidgetState extends State<MenuWidget> {
   _MenuWidgetState();
-  late List<String> petHistoryList = widget.petHistory.split(',');
+  late List<String> petHistoryList = widget.petHistory.split(', ');
 
   petHistorySprite(pet) {
     if (pet == 'octo-fox') {
@@ -23,6 +23,8 @@ class _MenuWidgetState extends State<MenuWidget> {
       return 'assets/images/pet2_layer1.png';
     } else if (pet == 'octo-dog') {
       return 'assets/images/pet3_layer1.png';
+    } else {
+      return 'assets/images/egg2.png';
     }
   }
 
@@ -66,10 +68,11 @@ class _MenuWidgetState extends State<MenuWidget> {
                   Expanded(
                     child: ListView.builder(
                       scrollDirection: Axis.vertical,
-                      itemCount: petHistoryList.length,
+                      itemCount: petHistoryList.length - 1,
                       padding: const EdgeInsets.all(15.0),
                       itemBuilder: (context, index) {
-                        List<String> pet = widget.petHistory.split(':');
+                        List<String> pet = petHistoryList[index].split(':');
+                        print(petHistoryList);
                         return Container(
                           padding: const EdgeInsets.only(
                             bottom: 60.0,
@@ -86,20 +89,25 @@ class _MenuWidgetState extends State<MenuWidget> {
                               ),
                               Column(
                                 children: [
-                                  Text(
-                                    pet[0].replaceAll(",", ""),
-                                    style: TextStyle(fontSize: 18),
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 5.0,
+                                    ),
+                                    child: Text(
+                                      pet[0],
+                                      style: TextStyle(fontSize: 18),
+                                    ),
                                   ),
                                   Text(
-                                    'Octo-ID: ${pet[1].replaceAll(",", "")}',
+                                    'Octo-ID: ${pet[1]}',
                                     style: TextStyle(fontSize: 10),
                                   ),
                                   Text(
-                                    'Hatch: ${pet[2].replaceAll(",", "")}',
+                                    'Hatch: ${pet[2]}',
                                     style: TextStyle(fontSize: 10),
                                   ),
                                   Text(
-                                    'POOF: ${pet[2].replaceAll(",", "")}',
+                                    'POOF: ${pet[2]}',
                                     style: TextStyle(fontSize: 10),
                                   ),
                                 ],
