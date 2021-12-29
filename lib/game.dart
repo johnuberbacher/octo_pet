@@ -22,9 +22,9 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
   String petIndex = '0';
   String petDob = '';
   int petLevel = 1;
-  double petHunger = 1.0;
-  double petHappiness = 1.0;
-  double petHealth = 1.0;
+  int petHunger = 100;
+  int petHappiness = 100;
+  int petHealth = 100;
   String petMood = '';
   String petHistory = '';
   final eggSprites = ['assets/images/egg1.png', 'assets/images/egg2.png'];
@@ -55,6 +55,7 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
+
     loadData();
     gameLoop();
     WidgetsBinding.instance!.addObserver(this);
@@ -123,27 +124,39 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
     print(petHistory);
   }
 
+  void poof() {
+    petType = 'octo-egg';
+    petIndex = '0';
+    petDob = '';
+    petLevel = 1;
+    petHunger = 100;
+    petHappiness = 100;
+    petHealth = 100;
+    petMood = '';
+  }
+
   void gameLoop() {
     // Game Loop
     Timer.periodic(Duration(milliseconds: gameTickerDuration), (timer) {
       setState(() => gameTicker++);
-      double incrementModifier = 0.025;
-      double positiveModifier = 0.05;
-      double minimumModifier = 0.15;
-      double maximumModifier = 0.75;
+      int incrementModifier = 1;
+      int positiveModifier = 2;
+      int minimumModifier = 0;
+      int maximumModifier = 75;
 
       if (petType != 'octo-egg') {
         // Hunger Loop
         if (petHunger > minimumModifier) {
           setState(() {
             petHunger -= incrementModifier;
+            print('petHunger: ${petHunger}');
           });
         }
         // Waste Loop
         if (waste == false) {
-          if (petHunger <= 0.5) {
+          if (petHunger <= 5) {
             int randomWasteEncounter = (Random().nextInt(100) + 1);
-            if (randomWasteEncounter <= 20) {
+            if (randomWasteEncounter <= 15) {
               print("Waste Value: ");
               print(randomWasteEncounter);
               setState(() {
@@ -153,28 +166,35 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
           }
         }
         // Happiness Loop
-        if (petHunger < minimumModifier && petHappiness > minimumModifier) {
+        if (petHunger == minimumModifier && petHappiness > minimumModifier) {
           setState(() {
             petHappiness -= incrementModifier;
+            print('petHappiness: ${petHappiness}');
           });
-        } else if (petHunger > maximumModifier) {
+        }
+        if (petHunger >= maximumModifier && petHappiness <= maximumModifier) {
           petHappiness += positiveModifier;
         }
         // Health Loop
-        if (petHunger < minimumModifier &&
-            petHappiness < minimumModifier &&
+        if (petHunger == minimumModifier &&
+            petHappiness == minimumModifier &&
             petHealth > minimumModifier) {
           setState(() {
             petHealth -= incrementModifier;
-            gameTickerDuration = 500;
+            print('petHealth: ${petHealth}');
           });
-        } else if (petHunger > maximumModifier &&
-            petHappiness > maximumModifier &&
-            petHealth < 1.0) {
+        } else if (petHunger >= maximumModifier &&
+            petHappiness >= maximumModifier &&
+            petHealth < 100) {
           setState(() {
             petHealth += positiveModifier;
-            gameTickerDuration = 500;
           });
+        }
+
+        if (petHealth == minimumModifier) {
+          // Poof!!!
+          print('poof! :(');
+          poof();
         }
 
         // Mood Loop
@@ -193,7 +213,7 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
 
   actionHatchEgg() {
     if (petType == 'octo-egg') {
-      if (hatchCount <= 3) {
+      if (hatchCount < 3) {
         setState(() {
           hatchCount++;
           audioHatch.play();
@@ -207,7 +227,7 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
             hatchMsg = 'Here I come!';
           }
         });
-      } else if (hatchCount == 4) {
+      } else if (hatchCount == 3) {
         int randomPetIndex = Random().nextInt(999999) + 100000;
         int randomPetType = (Random().nextInt(100) + 1);
         String petDateOfBirth =
@@ -226,16 +246,15 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
           'petDob',
           petDateOfBirth,
         );
-        storage.setItem('petHunger', 1.0);
-        storage.setItem('petHappiness', 1.0);
-        storage.setItem('petHealth', 1.0);
+        storage.setItem('petHunger', 100);
+        storage.setItem('petHappiness', 100);
+        storage.setItem('petHealth', 100);
         storage.setItem('petLevel', 1);
         storage.setItem(
-            'petHistory', '${newPetType}-${randomPetIndex.toString()}-${petDateOfBirth},');
+            'petHistory', '${newPetType}:${randomPetIndex.toString()}:${petDateOfBirth},');
         storage.setItem('petType', newPetType);
         print("New Egg has been saved to local storage!");
-        print("pet history:");
-        print('${newPetType},${randomPetIndex.toString()},${petDateOfBirth},');
+        print("History: ${newPetType},${randomPetIndex.toString()},${petDateOfBirth},");
         loadLocalStorage();
         audioSpawn.play();
       }
@@ -253,6 +272,7 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
   actionCleanWaste() {
     setState(() {
       audioClean.play();
+      petHappiness += 5;
       waste = false;
     });
   }
@@ -265,12 +285,12 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
   }
 
   actionFeed() async {
-    if (eating == false) {
+    if (eating == false && petType != 'octo-egg') {
       setState(() {
         audioUI.play();
         eating = true;
         Future.delayed(const Duration(milliseconds: 2000)).then((_) {
-          petHunger = 1.0;
+          petHunger = 100;
           audioFull.play();
           eating = false;
         });
@@ -280,7 +300,7 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
 
   actionPlay() {
     setState(() {
-      petHappiness = 1.0;
+      petHappiness = 100;
     });
   }
 
@@ -313,7 +333,7 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
   }
 
   showWaste() {
-    if (waste == true) {
+    if (waste == true && petType != 'octo-egg') {
       return Positioned(
         bottom: 0,
         left: 0,
@@ -364,7 +384,7 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
   }
 
   showFood() {
-    if (eating == true) {
+    if (eating == true && petType != 'octo-egg') {
       return Positioned(
         bottom: 0,
         child: SizedBox(

@@ -11,6 +11,10 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       theme: ThemeData(
+        colorScheme: ColorScheme.fromSwatch().copyWith(
+          primary: const Color(0xFF58734a),
+          secondary: const Color(0xFF222222),
+        ),
         textButtonTheme: TextButtonThemeData(
           style: ElevatedButton.styleFrom(
             enableFeedback: false,

@@ -2,9 +2,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 class UserInterfaceWidget extends StatefulWidget {
-  final double petHunger;
-  final double petHealth;
-  final double petHappiness;
+  final int petHunger;
+  final int petHealth;
+  final int petHappiness;
   final String petType;
   final String petDob;
   final int petLevel;
@@ -79,7 +79,7 @@ class _UserInterfaceWidgetState extends State<UserInterfaceWidget> {
                   bottom: 10.0,
                 ),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     const Padding(
                       padding: EdgeInsets.only(
@@ -102,7 +102,7 @@ class _UserInterfaceWidgetState extends State<UserInterfaceWidget> {
                         Container(
                           height: 5.0,
                           width: MediaQuery.of(context).size.width *
-                              widget.petHunger,
+                              (widget.petHunger.toDouble() / 100),
                           color: const Color(0xFF222222),
                         ),
                       ],
@@ -138,7 +138,7 @@ class _UserInterfaceWidgetState extends State<UserInterfaceWidget> {
                         Container(
                           height: 5.0,
                           width: MediaQuery.of(context).size.width *
-                              (widget.petHappiness),
+                              (widget.petHappiness.toDouble() / 100),
                           color: Color(0xFF222222),
                         ),
                       ],
@@ -174,7 +174,7 @@ class _UserInterfaceWidgetState extends State<UserInterfaceWidget> {
                         Container(
                           height: 5.0,
                           width: MediaQuery.of(context).size.width *
-                              (widget.petHealth),
+                              (widget.petHealth.toDouble() / 100),
                           color: Color(0xFF222222),
                         ),
                       ],
