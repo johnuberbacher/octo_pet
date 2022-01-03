@@ -6,7 +6,7 @@ class UserInterfaceWidget extends StatefulWidget {
   final int petHealth;
   final int petHappiness;
   final String petType;
-  final String petDob;
+  final DateTime petDob;
   final int petLevel;
   const UserInterfaceWidget({
     required this.petHunger,
@@ -24,9 +24,45 @@ class UserInterfaceWidget extends StatefulWidget {
 class _UserInterfaceWidgetState extends State<UserInterfaceWidget> {
   @override
   Widget build(BuildContext context) {
-    if (widget.petType == 'octo-egg') {
-      return Container();
-    } else {
+    if (widget.petType == 'octo-ghost') {
+      return Container(
+          padding: const EdgeInsets.only(
+            top: 45.0,
+            left: 45.0,
+            right: 45.0,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: const [
+              Text(
+                'Poof!',
+                style: TextStyle(fontSize: 36),
+                textAlign: TextAlign.center,
+              ),
+              Padding(
+                padding: EdgeInsets.only(
+                  top: 35.0,
+                ),
+                child: Text(
+                  'Your Octo-Pet has left.',
+                  style: TextStyle(fontSize: 20),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              Padding(
+                padding: EdgeInsets.only(
+                  top: 35.0,
+                ),
+                child: Text(
+                  'Thanks for playing!',
+                  style: TextStyle(fontSize: 20),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ],
+          ));
+    } else if (widget.petType != 'octo-egg' && widget.petType != 'octo-ghost') {
       return Padding(
         padding: const EdgeInsets.all(
           10.0,
@@ -55,19 +91,22 @@ class _UserInterfaceWidgetState extends State<UserInterfaceWidget> {
                   children: [
                     Text(
                       widget.petType,
-                      style: TextStyle(fontSize: 26),
+                      style: TextStyle(fontSize: 28),
                     ),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          widget.petDob,
-                          style: TextStyle(fontSize: 12),
+                          DateTime(widget.petDob.year, widget.petDob.month, widget.petDob.day)
+                              .toString()
+                              .substring(0, 10)
+                              .replaceAll(RegExp(r'[^\w\s]+'), '/'),
+                          style: TextStyle(fontSize: 9),
                         ),
                         Text(
                           "Lvl. " + widget.petLevel.toString(),
-                          style: TextStyle(fontSize: 12),
+                          style: TextStyle(fontSize: 14.25),
                         ),
                       ],
                     )
@@ -186,6 +225,8 @@ class _UserInterfaceWidgetState extends State<UserInterfaceWidget> {
           ),
         ),
       );
+    } else {
+      return Container();
     }
   }
 }

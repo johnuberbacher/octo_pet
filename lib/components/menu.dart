@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
@@ -23,6 +22,8 @@ class _MenuWidgetState extends State<MenuWidget> {
       return 'assets/images/pet2_layer1.png';
     } else if (pet == 'octo-dog') {
       return 'assets/images/pet3_layer1.png';
+    } else if (pet == 'octo-bot') {
+      return 'assets/images/pet4_layer1.png';
     } else {
       return 'assets/images/egg2.png';
     }
@@ -55,8 +56,8 @@ class _MenuWidgetState extends State<MenuWidget> {
                 mainAxisAlignment: MainAxisAlignment.start,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.only(
+                  const Padding(
+                    padding: EdgeInsets.only(
                       top: 30.0,
                       bottom: 30.0,
                     ),
@@ -72,7 +73,6 @@ class _MenuWidgetState extends State<MenuWidget> {
                       padding: const EdgeInsets.all(15.0),
                       itemBuilder: (context, index) {
                         List<String> pet = petHistoryList[index].split(':');
-                        print(petHistoryList);
                         return Container(
                           padding: const EdgeInsets.only(
                             bottom: 60.0,

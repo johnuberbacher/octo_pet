@@ -30,6 +30,7 @@ dependencies:
   audiofileplayer: ^2.1.0
   localstorage: ^4.0.0+1
   flutter_launcher_icons: ^0.9.2
+  intl: ^0.17.0
 
 dev_dependencies:
   flutter_test:
@@ -58,6 +59,7 @@ flutter:
   # To add assets to your application, add an assets section, like this:
   assets:
     - assets/images/
+    - assets/images/emotes/
     - assets/sfx/
     - assets/icon/
 

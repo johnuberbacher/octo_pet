@@ -1,6 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
-import 'dart:ffi';
 import 'dart:math';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -20,7 +18,8 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
   final LocalStorage storage = LocalStorage('petData.json');
   String petType = 'octo-egg';
   String petIndex = '0';
-  String petDob = '';
+  DateTime petDob = DateTime.now();
+  DateTime petPreviousDateTime = DateTime.now();
   int petLevel = 1;
   int petHunger = 100;
   int petHappiness = 100;
@@ -31,6 +30,8 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
   final petFoxSprites = ['assets/images/pet1_layer1.png', 'assets/images/pet1_layer2.png'];
   final petBatSprites = ['assets/images/pet2_layer1.png', 'assets/images/pet2_layer2.png'];
   final petDogSprites = ['assets/images/pet3_layer1.png', 'assets/images/pet3_layer2.png'];
+  final petBotSprites = ['assets/images/pet4_layer1.png', 'assets/images/pet4_layer2.png'];
+  final petGhostSprites = ['assets/images/ghost_layer1.png', 'assets/images/ghost_layer2.png'];
   final wasteSprites = ['assets/images/waste1.png', 'assets/images/waste2.png'];
   final fruitSprites = [
     'assets/images/fruit1.png',
@@ -43,6 +44,7 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
   bool showMenu = false;
   bool eating = false;
   bool waste = false;
+  bool showEmote = false;
 
   int gameTicker = 0;
   int gameTickerDuration = 1000;
@@ -52,6 +54,7 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
   Audio audioSpawn = Audio.load('assets/sfx/spawn.wav');
   Audio audioFull = Audio.load('assets/sfx/full.wav');
   Audio audioPoof = Audio.load('assets/sfx/poof.wav');
+  Audio audioEgg = Audio.load('assets/sfx/egg.wav');
 
   @override
   void initState() {
@@ -71,23 +74,15 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
-
     switch (state) {
       case AppLifecycleState.resumed:
         loadData();
-        print('saved to local storage');
+        calculateTimeStatDifference();
+        print('Resumed: Loaded local storage');
         break;
       case AppLifecycleState.inactive:
         saveLocalStorage();
-        print('saved to local storage');
-        break;
-      case AppLifecycleState.paused:
-        saveLocalStorage();
-        print('saved to local storage');
-        break;
-      case AppLifecycleState.detached:
-        saveLocalStorage();
-        print('saved to local storage');
+        print('Inactive: saved to local storage');
         break;
     }
   }
@@ -96,11 +91,24 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
     await storage.ready;
     if (storage.getItem('petType') == 'octo-egg' || storage.getItem('petType') == null) {
       storage.setItem('petType', 'octo-egg');
+    } else if (storage.getItem('petType') == 'octo-ghost') {
+      storage.setItem('petType', 'octo-ghost');
     } else {
       print("Local sotrage data has been found, loading now...");
       loadLocalStorage();
-      print("Local data has been loaded!");
     }
+  }
+
+  void resetLocalStorage() async {
+    storage.ready;
+    storage.deleteItem('petType');
+    storage.deleteItem('petIndex');
+    storage.deleteItem('petDob');
+    storage.deleteItem('petHunger');
+    storage.deleteItem('petHappiness');
+    storage.deleteItem('petHealth');
+    storage.deleteItem('petLevel');
+    storage.deleteItem('petPreviousDateTime');
   }
 
   void saveLocalStorage() async {
@@ -109,14 +117,46 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
     storage.setItem('petHappiness', petHappiness);
     storage.setItem('petHealth', petHealth);
     storage.setItem('petLevel', petLevel);
+    storage.setItem('petPreviousDateTime', DateTime.now().toString());
+    print('Saving value petPreviousDateTime as : ${DateTime.now().toString()}');
+  }
+
+  calculateTimeStatDifference() {
+    if (petType != 'octo-egg' && petType != 'octo-ghost') {
+      petPreviousDateTime = DateTime.parse(storage.getItem('petPreviousDateTime'));
+      DateTime recordedTime = petPreviousDateTime;
+      DateTime currentTime = DateTime.now();
+      final difference = currentTime.difference(recordedTime);
+
+      // Calculate Level
+      print('days: ${difference.inDays}');
+
+      // Calculate Hunger, Happiness and Health Changes
+      if (difference.inSeconds >= 2) {
+        // Hunger Check
+        if ((petHunger - difference.inSeconds) <= 0) {
+          setState(() {
+            petHunger = 2;
+          });
+        } else {
+          setState(() {
+            petHunger -= difference.inSeconds;
+          });
+        }
+        print('Last Recorded Time: ${recordedTime}');
+        print('Current time      : ${currentTime}');
+        print('last check up was ${difference.inSeconds} seconds ago');
+      }
+    }
   }
 
   void loadLocalStorage() async {
     await storage.ready;
+    print("Loading last recorded stats...");
     setState(() {
       petType = storage.getItem('petType');
       petIndex = storage.getItem('petIndex');
-      petDob = storage.getItem('petDob');
+      petDob = DateTime.parse(storage.getItem('petDob'));
       petHunger = storage.getItem('petHunger');
       petHappiness = storage.getItem('petHappiness');
       petHealth = storage.getItem('petHealth');
@@ -128,12 +168,14 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
   void poof() async {
     audioPoof.play();
     await storage.ready;
+    resetLocalStorage();
     String currentPetHistory = storage.getItem('petHistory');
-    String updatedPetHistory = currentPetHistory + '${petType}:${petIndex.toString()}:${petDob}, ';
+    String updatedPetHistory =
+        currentPetHistory + '${petType}:${petIndex.toString()}:${petDob.toString()}, ';
     storage.setItem('petHistory', updatedPetHistory);
-    petType = 'octo-egg';
+    petType = 'octo-ghost';
     petIndex = '0';
-    petDob = '';
+    petDob = DateTime.now();
     petLevel = 1;
     petHunger = 100;
     petHappiness = 100;
@@ -144,21 +186,23 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
     waste = false;
   }
 
-  void gameLoop() {
+  void gameLoop() async {
     // Game Loop
     Timer.periodic(Duration(milliseconds: gameTickerDuration), (timer) {
       setState(() => gameTicker++);
-      int incrementModifier = 1;
-      int positiveModifier = 2;
+      int incrementModifier = 2;
+      int positiveModifier = 4;
+      int actionModifier = 25;
       int minimumModifier = 0;
-      int maximumModifier = 75;
+      int medianModifier = 50;
+      int semiMaximumModifier = 75;
+      int maximumModifier = 100;
 
-      if (petType != 'octo-egg') {
+      if (petType != 'octo-egg' && petType != 'octo-ghost') {
         // Hunger Loop
         if (petHunger > minimumModifier) {
           setState(() {
             petHunger -= incrementModifier;
-            print('petHunger: ${petHunger}');
           });
         }
         // Waste Loop
@@ -178,10 +222,9 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
         if (petHunger == minimumModifier && petHappiness > minimumModifier) {
           setState(() {
             petHappiness -= incrementModifier;
-            print('petHappiness: ${petHappiness}');
           });
         }
-        if (petHunger >= maximumModifier && petHappiness <= maximumModifier) {
+        if (petHunger >= semiMaximumModifier && petHappiness <= semiMaximumModifier) {
           petHappiness += positiveModifier;
         }
         // Health Loop
@@ -190,33 +233,158 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
             petHealth > minimumModifier) {
           setState(() {
             petHealth -= incrementModifier;
-            print('petHealth: ${petHealth}');
           });
-        } else if (petHunger >= maximumModifier &&
-            petHappiness >= maximumModifier &&
-            petHealth < 100) {
+        } else if (petHunger >= semiMaximumModifier &&
+            petHappiness >= semiMaximumModifier &&
+            petHealth < maximumModifier) {
           setState(() {
             petHealth += positiveModifier;
           });
         }
-
+        // Emotes/Emotions
+        if (petHunger >= medianModifier &&
+            petHappiness >= medianModifier &&
+            petHealth >= medianModifier) {
+          setState(() {
+            petMood = 'happy';
+          });
+        }
+        if (petHunger >= semiMaximumModifier &&
+            petHappiness >= semiMaximumModifier &&
+            petHealth >= semiMaximumModifier) {
+          setState(() {
+            petMood = 'love';
+          });
+        }
+        if (petHunger == minimumModifier) {
+          setState(() {
+            petMood = 'hungry';
+          });
+        }
+        if (petHappiness <= medianModifier) {
+          setState(() {
+            petMood = 'bored';
+          });
+        }
+        if (petHappiness == minimumModifier) {
+          setState(() {
+            petMood = 'blank';
+          });
+        }
+        if (petHealth <= semiMaximumModifier) {
+          setState(() {
+            petMood = 'sad';
+          });
+        }
         if (petHealth == minimumModifier) {
           // Poof!!!
-          print('poof! :(');
           poof();
         }
-
-        // Mood Loop
-        if (petHunger <= minimumModifier) {
-          setState(() {
-            petMood == 'hungry';
-          });
-        } else {
-          setState(() {
-            petMood == '';
-          });
-        }
+        print('petHunger   : ${petHunger}');
+        //print('petHappiness: ${petHappiness}');
+        //print('petHealth   : ${petHealth}');
+        //print('/////////////////');
       }
+    });
+  }
+
+  actionMenu() {
+    if (petType != 'octo-egg' && petType != 'octo-ghost') {
+      return Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Expanded(
+            child: TextButton(
+              onPressed: () {
+                actionFeed();
+              },
+              child: const FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  "Feed",
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 5),
+          Expanded(
+            child: TextButton(
+              onPressed: () {
+                actionPlay();
+              },
+              child: const FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  "Play",
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 5),
+          Expanded(
+            child: TextButton(
+              onPressed: () {
+                actionHideMenu();
+              },
+              child: const FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  "History",
+                ),
+              ),
+            ),
+          ),
+        ],
+      );
+    } else if (petType == 'octo-egg') {
+      return Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Expanded(
+            child: TextButton(
+              onPressed: () {
+                actionHatchEgg();
+              },
+              child: const FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  "Hatch!",
+                ),
+              ),
+            ),
+          ),
+        ],
+      );
+    } else if (petType == 'octo-ghost') {
+      return Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Expanded(
+            child: TextButton(
+              onPressed: () {
+                actionSpawnNewEgg();
+              },
+              child: const FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  "Try Again!",
+                ),
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+  }
+
+  actionSpawnNewEgg() async {
+    setState(() {
+      petType = 'octo-egg';
+      audioEgg.play();
+      storage.setItem('petType', petType);
     });
   }
 
@@ -239,22 +407,24 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
       } else if (hatchCount == 3) {
         int randomPetIndex = Random().nextInt(900000) + 100000;
         int randomPetType = (Random().nextInt(100) + 1);
-        String petDateOfBirth =
-            DateTime.now().toString().substring(0, 10).replaceAll(RegExp(r'[^\w\s]+'), '/');
+        DateTime petDateOfBirth = DateTime.now();
         String newPetType = '';
-        if (randomPetType <= 33) {
-          newPetType = 'octo-fox';
-        } else if (randomPetType >= 34 && randomPetType <= 66) {
-          newPetType = 'octo-bat';
-        } else if (randomPetType >= 67) {
+        if (randomPetType >= 91 && randomPetType <= 100) {
+          newPetType = 'octo-bot';
+        } else if (randomPetType >= 0 && randomPetType <= 30) {
           newPetType = 'octo-dog';
+        } else if (randomPetType >= 31 && randomPetType <= 60) {
+          newPetType = 'octo-bat';
+        } else if (randomPetType >= 61 && randomPetType <= 90) {
+          newPetType = 'octo-fox';
         }
+        print("PetType: ${randomPetType}");
         print("No saved data found, creating now...");
         await storage.ready;
         storage.setItem('petIndex', randomPetIndex.toString());
         storage.setItem(
           'petDob',
-          petDateOfBirth,
+          petDateOfBirth.toString(),
         );
         storage.setItem('petHunger', 100);
         storage.setItem('petHappiness', 100);
@@ -273,6 +443,7 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
         print("History: ${newPetType},${randomPetIndex.toString()},${petDateOfBirth},");
         storage.setItem('petType', newPetType);
         loadLocalStorage();
+        hatchMsg = 'Hatch me!';
         hatchCount = 0;
         audioSpawn.play();
       }
@@ -280,17 +451,23 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
   }
 
   actionCheckEmotion() {
-    print("Here");
-    int emotionCount = 0;
-    setState(() {
-      emotionCount++;
-    });
+    audioUI.play();
+    if (showEmote == false) {
+      setState(() {
+        showEmote = true;
+      });
+      Future.delayed(const Duration(milliseconds: 3000), () {
+        setState(() {
+          showEmote = false;
+        });
+      });
+    }
   }
 
   actionCleanWaste() {
     setState(() {
       audioClean.play();
-      petHappiness += 5;
+      petHappiness += 4;
       waste = false;
     });
   }
@@ -304,20 +481,21 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
   }
 
   actionFeed() async {
-    if (eating == false && petType != 'octo-egg') {
+    if (eating == false && petType != 'octo-egg' && petType != 'octo-ghost') {
       setState(() {
         audioUI.play();
         eating = true;
-        Future.delayed(const Duration(milliseconds: 2000)).then((_) {
+        Future.delayed(const Duration(milliseconds: 4000)).then((_) {
+          eating = false;
           petHunger = 100;
           audioFull.play();
-          eating = false;
         });
       });
     }
   }
 
   actionPlay() {
+    audioUI.play();
     setState(() {
       petHappiness = 100;
     });
@@ -342,6 +520,18 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
         fit: BoxFit.fitWidth,
         alignment: Alignment.center,
       );
+    } else if (petType == 'octo-bot') {
+      return Image.asset(
+        petBotSprites[gameTicker % petBotSprites.length],
+        fit: BoxFit.fitWidth,
+        alignment: Alignment.center,
+      );
+    } else if (petType == 'octo-ghost') {
+      return Image.asset(
+        petGhostSprites[gameTicker % petGhostSprites.length],
+        fit: BoxFit.fitWidth,
+        alignment: Alignment.center,
+      );
     } else {
       return Image.asset(
         eggSprites[gameTicker % eggSprites.length],
@@ -352,7 +542,7 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
   }
 
   showWaste() {
-    if (waste == true && petType != 'octo-egg') {
+    if (waste == true && petType != 'octo-egg' && petType != 'octo-ghost') {
       return Positioned(
         bottom: 0,
         left: 0,
@@ -382,35 +572,38 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
   }
 
   petEmote(String petMood) {
-    if (petMood != '') {
+    if (showEmote == true) {
       return Positioned(
-        bottom: MediaQuery.of(context).size.width * 0.35,
+        bottom: MediaQuery.of(context).size.width * 0.75,
         left: 0,
         right: 0,
         child: Image.asset(
-          'assets/images/emote_$petMood.png',
+          'assets/images/emotes/emote_$petMood.png',
           fit: BoxFit.fitWidth,
         ),
       );
     } else {
       return Positioned(
-        bottom: MediaQuery.of(context).size.width * 0.35,
+        bottom: MediaQuery.of(context).size.width * 0.75,
         left: 0,
         right: 0,
-        child: Container(),
+        child: const SizedBox(
+          width: 0,
+          height: 0,
+        ),
       );
     }
   }
 
   showFood() {
-    if (eating == true && petType != 'octo-egg') {
+    if (eating == true && petType != 'octo-egg' && petType != 'octo-ghost') {
       return Positioned(
         bottom: 0,
         child: SizedBox(
           height: MediaQuery.of(context).size.width * 0.4,
           width: MediaQuery.of(context).size.width * 0.4,
           child: AnimatedSwitcher(
-            duration: Duration(milliseconds: gameTickerDuration),
+            duration: const Duration(milliseconds: 3000),
             child: Image.asset(
               fruitSprites[gameTicker % fruitSprites.length],
               fit: BoxFit.fitWidth,
@@ -523,73 +716,7 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
                       ),
                       Container(
                         padding: const EdgeInsets.all(10.0),
-                        child: petType != 'octo-egg'
-                            ? Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  Expanded(
-                                    child: TextButton(
-                                      onPressed: () {
-                                        actionFeed();
-                                      },
-                                      child: const FittedBox(
-                                        fit: BoxFit.scaleDown,
-                                        child: Text(
-                                          "Feed",
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 5),
-                                  Expanded(
-                                    child: TextButton(
-                                      onPressed: () {
-                                        actionPlay();
-                                      },
-                                      child: const FittedBox(
-                                        fit: BoxFit.scaleDown,
-                                        child: Text(
-                                          "Play",
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 5),
-                                  Expanded(
-                                    child: TextButton(
-                                      onPressed: () {
-                                        actionHideMenu();
-                                      },
-                                      child: const FittedBox(
-                                        fit: BoxFit.scaleDown,
-                                        child: Text(
-                                          "History",
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              )
-                            : Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  Expanded(
-                                    child: TextButton(
-                                      onPressed: () {
-                                        actionHatchEgg();
-                                      },
-                                      child: const FittedBox(
-                                        fit: BoxFit.scaleDown,
-                                        child: Text(
-                                          "Hatch!",
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
+                        child: actionMenu(),
                       ),
                     ],
                   ),
