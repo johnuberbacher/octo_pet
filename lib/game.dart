@@ -59,14 +59,14 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
-
+    WidgetsBinding.instance!.addObserver(this);
     loadData();
     gameLoop();
-    WidgetsBinding.instance!.addObserver(this);
   }
 
   @override
   void dispose() {
+    saveLocalStorage();
     WidgetsBinding.instance!.removeObserver(this);
     super.dispose();
   }
@@ -75,14 +75,17 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
     switch (state) {
-      case AppLifecycleState.resumed:
-        loadData();
-        calculateTimeStatDifference();
-        print('Resumed: Loaded local storage');
-        break;
       case AppLifecycleState.inactive:
         saveLocalStorage();
-        print('Inactive: saved to local storage');
+        print('inactive: saved to local storage');
+        break;
+      case AppLifecycleState.paused:
+        saveLocalStorage();
+        print('paused: saved to local storage');
+        break;
+      case AppLifecycleState.detached:
+        saveLocalStorage();
+        print('detached: saved to local storage');
         break;
     }
   }
@@ -100,7 +103,7 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
   }
 
   void resetLocalStorage() async {
-    storage.ready;
+    await storage.ready;
     storage.deleteItem('petType');
     storage.deleteItem('petIndex');
     storage.deleteItem('petDob');
@@ -123,29 +126,36 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
 
   calculateTimeStatDifference() {
     if (petType != 'octo-egg' && petType != 'octo-ghost') {
-      petPreviousDateTime = DateTime.parse(storage.getItem('petPreviousDateTime'));
+      int incrementModifier = 2;
       DateTime recordedTime = petPreviousDateTime;
       DateTime currentTime = DateTime.now();
       final difference = currentTime.difference(recordedTime);
 
-      // Calculate Level
-      print('days: ${difference.inDays}');
+      print("""
+        The current petHunger is: ${petHunger}
+        The currentTime is ${currentTime.toString()}
+        and the last recored playtime was ${recordedTime.toString()}
+        The difference between these is: ${difference.toString()}
+        The differnce in seconds is: ${difference.inSeconds}
+        """);
 
       // Calculate Hunger, Happiness and Health Changes
-      if (difference.inSeconds >= 2) {
-        // Hunger Check
-        if ((petHunger - difference.inSeconds) <= 0) {
-          setState(() {
-            petHunger = 2;
-          });
-        } else {
-          setState(() {
-            petHunger -= difference.inSeconds;
-          });
-        }
-        print('Last Recorded Time: ${recordedTime}');
-        print('Current time      : ${currentTime}');
-        print('last check up was ${difference.inSeconds} seconds ago');
+      if ((petHunger - difference.inSeconds) < incrementModifier) {
+        print("""
+          petHunger - difference.inSeconds = ${petHunger - difference.inSeconds}
+          setting petHunger to ${incrementModifier}
+        """);
+        setState(() {
+          petHunger = incrementModifier;
+        });
+      } else {
+        print("""
+          petHunger - difference.inSeconds = ${petHunger - difference.inSeconds}
+          setting petHunger to ${petHunger -= difference.inSeconds}
+        """);
+        setState(() {
+          petHunger -= difference.inSeconds;
+        });
       }
     }
   }
@@ -162,7 +172,21 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
       petHealth = storage.getItem('petHealth');
       petLevel = storage.getItem('petLevel');
       petHistory = storage.getItem('petHistory');
+      petPreviousDateTime = DateTime.parse(storage.getItem('petPreviousDateTime'));
     });
+    print("""
+        LOCAL STORAGE: DOES NOT CONTAIN PREVIOUS TIME!!!
+        petType: ${petType}
+        petIndex: ${petIndex}
+        petDob: ${petDob}
+        petHunger: ${petHunger}
+        petHappiness: ${petHappiness}
+        petHealth: ${petHealth}
+        petLevel: ${petLevel}
+        petHistory: ${petHistory}
+        petPreviousDateTime: ${petPreviousDateTime}
+      """);
+    calculateTimeStatDifference();
   }
 
   void poof() async {
@@ -170,8 +194,8 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
     await storage.ready;
     resetLocalStorage();
     String currentPetHistory = storage.getItem('petHistory');
-    String updatedPetHistory =
-        currentPetHistory + '${petType}:${petIndex.toString()}:${petDob.toString()}, ';
+    String updatedPetHistory = currentPetHistory +
+        '${petType}:${petIndex.toString()}:${petDob.toString()}:${petLevel.toString()}, ';
     storage.setItem('petHistory', updatedPetHistory);
     petType = 'octo-ghost';
     petIndex = '0';
@@ -276,7 +300,7 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
             petMood = 'sad';
           });
         }
-        if (petHealth == minimumModifier) {
+        if (petHealth <= minimumModifier) {
           // Poof!!!
           poof();
         }
@@ -433,7 +457,6 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
 
         if (storage.getItem('petHistory') == null) {
           storage.setItem('petHistory', '');
-          print('NO NO NO pet history found:');
           print(storage.getItem('petHistory'));
         } else {
           print('YES YES YES pet history found:');
@@ -451,16 +474,18 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
   }
 
   actionCheckEmotion() {
-    audioUI.play();
-    if (showEmote == false) {
-      setState(() {
-        showEmote = true;
-      });
-      Future.delayed(const Duration(milliseconds: 3000), () {
+    if (petType != 'octo-egg' && petType != 'octo-ghost') {
+      audioUI.play();
+      if (showEmote == false) {
         setState(() {
-          showEmote = false;
+          showEmote = true;
         });
-      });
+        Future.delayed(const Duration(milliseconds: 3000), () {
+          setState(() {
+            showEmote = false;
+          });
+        });
+      }
     }
   }
 
