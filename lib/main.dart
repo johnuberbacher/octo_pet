@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:octo_pet/game.dart';
 
 void main() => runApp(MyApp());
@@ -9,6 +10,10 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+    ]);
     return MaterialApp(
       theme: ThemeData(
         colorScheme: ColorScheme.fromSwatch().copyWith(
@@ -17,12 +22,13 @@ class MyApp extends StatelessWidget {
         ),
         textButtonTheme: TextButtonThemeData(
           style: ElevatedButton.styleFrom(
+            fixedSize: const Size.fromHeight(60),
             enableFeedback: false,
             primary: const Color(0xFF58734a), // Button color
             onPrimary: const Color(0xFF222222),
             padding: const EdgeInsets.symmetric(
-              vertical: 20.0,
-              horizontal: 14.0,
+              vertical: 0.0,
+              horizontal: 15.0,
             ),
             shape: const RoundedRectangleBorder(
               borderRadius: BorderRadius.all(Radius.circular(0)),

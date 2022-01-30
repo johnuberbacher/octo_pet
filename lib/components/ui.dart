@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 class UserInterfaceWidget extends StatefulWidget {
+  final int maximumModifier;
   final int petHunger;
   final int petHealth;
   final int petHappiness;
@@ -9,6 +10,7 @@ class UserInterfaceWidget extends StatefulWidget {
   final DateTime petDob;
   final int petLevel;
   const UserInterfaceWidget({
+    required this.maximumModifier,
     required this.petHunger,
     required this.petHealth,
     required this.petHappiness,
@@ -22,6 +24,60 @@ class UserInterfaceWidget extends StatefulWidget {
 }
 
 class _UserInterfaceWidgetState extends State<UserInterfaceWidget> {
+  userInterfaceStat(statName, statValue) {
+    double formatStat = (statValue / widget.maximumModifier);
+    return (Padding(
+      padding: const EdgeInsets.only(
+        top: 10.0,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(
+              bottom: 2.5,
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  "$statName:",
+                  style: const TextStyle(
+                    fontSize: 12.0,
+                  ),
+                ),
+                Text(
+                  "${(formatStat * 100).toStringAsFixed(0)}/100",
+                  style: const TextStyle(
+                    fontSize: 12.0,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Stack(
+            children: [
+              FractionallySizedBox(
+                widthFactor: 1.0,
+                child: Container(
+                  height: 5.0,
+                  color: const Color(0xFF222222).withOpacity(0.25),
+                ),
+              ),
+              FractionallySizedBox(
+                widthFactor: (formatStat),
+                child: Container(
+                  height: 5.0,
+                  color: const Color(0xFF222222),
+                ),
+              ),
+            ],
+          )
+        ],
+      ),
+    ));
+  }
+
   @override
   Widget build(BuildContext context) {
     if (widget.petType == 'octo-ghost') {
@@ -42,7 +98,7 @@ class _UserInterfaceWidgetState extends State<UserInterfaceWidget> {
               ),
               Padding(
                 padding: EdgeInsets.only(
-                  top: 35.0,
+                  top: 30.0,
                 ),
                 child: Text(
                   'Your Octo-Pet has left.',
@@ -52,7 +108,7 @@ class _UserInterfaceWidgetState extends State<UserInterfaceWidget> {
               ),
               Padding(
                 padding: EdgeInsets.only(
-                  top: 35.0,
+                  top: 30.0,
                 ),
                 child: Text(
                   'Thanks for playing!',
@@ -64,9 +120,7 @@ class _UserInterfaceWidgetState extends State<UserInterfaceWidget> {
           ));
     } else if (widget.petType != 'octo-egg' && widget.petType != 'octo-ghost') {
       return Padding(
-        padding: const EdgeInsets.all(
-          10.0,
-        ),
+        padding: const EdgeInsets.all(10.0),
         child: Container(
           padding: const EdgeInsets.all(
             15.0,
@@ -82,8 +136,8 @@ class _UserInterfaceWidgetState extends State<UserInterfaceWidget> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Padding(
-                padding: EdgeInsets.only(
-                  bottom: 10.0,
+                padding: const EdgeInsets.only(
+                  bottom: 5.0,
                 ),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
@@ -104,123 +158,21 @@ class _UserInterfaceWidgetState extends State<UserInterfaceWidget> {
                               .replaceAll(RegExp(r'[^\w\s]+'), '/'),
                           style: TextStyle(fontSize: 9),
                         ),
-                        Text(
-                          "Lvl. " + widget.petLevel.toString(),
-                          style: TextStyle(fontSize: 14.25),
+                        FittedBox(
+                          child: Text(
+                            "Lvl. " + widget.petLevel.toString(),
+                            style: TextStyle(fontSize: 14.25),
+                          ),
                         ),
                       ],
                     )
                   ],
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.only(
-                  bottom: 10.0,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const Padding(
-                      padding: EdgeInsets.only(
-                        bottom: 5.0,
-                      ),
-                      child: Text(
-                        "Hunger:",
-                        style: TextStyle(
-                          fontSize: 12.0,
-                        ),
-                      ),
-                    ),
-                    Stack(
-                      children: [
-                        Container(
-                          height: 5.0,
-                          width: MediaQuery.of(context).size.width,
-                          color: const Color(0xFF222222).withOpacity(0.25),
-                        ),
-                        Container(
-                          height: 5.0,
-                          width: MediaQuery.of(context).size.width *
-                              (widget.petHunger.toDouble() / 100),
-                          color: const Color(0xFF222222),
-                        ),
-                      ],
-                    )
-                  ],
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(
-                  bottom: 10.0,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Padding(
-                      padding: EdgeInsets.only(
-                        bottom: 5.0,
-                      ),
-                      child: Text(
-                        "Happiness:",
-                        style: TextStyle(
-                          fontSize: 12.0,
-                        ),
-                      ),
-                    ),
-                    Stack(
-                      children: [
-                        Container(
-                          height: 5.0,
-                          width: MediaQuery.of(context).size.width,
-                          color: Color(0xFF222222).withOpacity(0.25),
-                        ),
-                        Container(
-                          height: 5.0,
-                          width: MediaQuery.of(context).size.width *
-                              (widget.petHappiness.toDouble() / 100),
-                          color: Color(0xFF222222),
-                        ),
-                      ],
-                    )
-                  ],
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(
-                  bottom: 2.0,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Padding(
-                      padding: EdgeInsets.only(
-                        bottom: 5.0,
-                      ),
-                      child: Text(
-                        "Health:",
-                        style: TextStyle(
-                          fontSize: 12.0,
-                        ),
-                      ),
-                    ),
-                    Stack(
-                      children: [
-                        Container(
-                          height: 5.0,
-                          width: MediaQuery.of(context).size.width,
-                          color: Color(0xFF222222).withOpacity(0.25),
-                        ),
-                        Container(
-                          height: 5.0,
-                          width: MediaQuery.of(context).size.width *
-                              (widget.petHealth.toDouble() / 100),
-                          color: Color(0xFF222222),
-                        ),
-                      ],
-                    )
-                  ],
-                ),
-              ),
+              //
+              userInterfaceStat('Hunger', widget.petHunger),
+              userInterfaceStat('Happiness', widget.petHappiness),
+              userInterfaceStat('Health', widget.petHealth),
             ],
           ),
         ),

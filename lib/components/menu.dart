@@ -80,7 +80,8 @@ class _MenuWidgetState extends State<MenuWidget> {
                           child: Column(
                             children: [
                               SizedBox(
-                                width: MediaQuery.of(context).size.width * 0.33,
+                                width: 150,
+                                height: 150,
                                 child: Image.asset(
                                   petHistorySprite(pet[0]),
                                   fit: BoxFit.fitWidth,
@@ -98,8 +99,12 @@ class _MenuWidgetState extends State<MenuWidget> {
                                       style: TextStyle(fontSize: 18),
                                     ),
                                   ),
+                                  // Text(
+                                  //  'Octo-ID: ${pet[1]}',
+                                  //  style: TextStyle(fontSize: 10),
+                                  // ),
                                   Text(
-                                    'Octo-ID: ${pet[1]}',
+                                    'Level: ${pet[4]}',
                                     style: TextStyle(fontSize: 10),
                                   ),
                                   Text(
