@@ -22,22 +22,23 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
   int gameTickerDuration = 1000;
   int minimumModifier = 0; // zero - always keep at 0
   int incrementModifier = 1; // negative ticker - always keep at 1
-  int positiveModifier = 4320; //   1/10
-  int actionModifier = 10800; //   1/4th
-  int medianModifier = 21600; //   1/2
-  int semiMaximumModifier = 32400; //   3/4
-  int maximumModifier = 43200; //  4/4
+  int positiveModifier = 360; //   1/10
+  int actionModifier = 900; //   1/4th
+  int medianModifier = 1800; //   1/2
+  int semiMaximumModifier = 2700; //   3/4
+  int maximumModifier = 3600; //  4/4
 
   String petType = 'octo-egg';
   String petIndex = '0';
   DateTime petDob = DateTime.now();
   DateTime petPreviousDateTime = DateTime.now();
   int petLevel = 1;
-  int petHunger = 43200;
-  int petHappiness = 43200;
-  int petHealth = 43200;
   String petMood = '';
   String petHistory = '';
+  int petHunger = 3600; // 1/3
+  int petHappiness = 3600; // 1/3
+  int petHealth = 3600; // 1/3
+
   final eggSprites = ['assets/images/egg1.png', 'assets/images/egg2.png'];
   final petFoxSprites = ['assets/images/pet1_layer1.png', 'assets/images/pet1_layer2.png'];
   final petBatSprites = ['assets/images/pet2_layer1.png', 'assets/images/pet2_layer2.png'];
@@ -46,16 +47,19 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
   final petBotSprites = ['assets/images/pet4_layer1.png', 'assets/images/pet4_layer2.png'];
   final petGhostSprites = ['assets/images/ghost_layer1.png', 'assets/images/ghost_layer2.png'];
   final wasteSprites = ['assets/images/waste1.png', 'assets/images/waste2.png'];
+  final playSprites = ['assets/images/play1.png', 'assets/images/play2.png'];
   final fruitSprites = [
     'assets/images/fruit1.png',
     'assets/images/fruit2.png',
     'assets/images/fruit3.png',
     'assets/images/fruit4.png',
   ];
+
   String hatchMsg = 'Hatch me!';
   int hatchCount = 0;
   bool showMenu = false;
   bool eating = false;
+  bool playing = false;
   bool waste = false;
   bool showEmote = false;
 
@@ -86,6 +90,10 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
     switch (state) {
+      case AppLifecycleState.resumed:
+        loadLocalStorage();
+        print('resumfed: loaded local storage');
+        break;
       case AppLifecycleState.inactive:
         saveLocalStorage();
         print('inactive: saved to local storage');
@@ -188,11 +196,8 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
 
       // Calculate Level
       final calculateLevel = currentTime.difference(petDob);
-      print('time since birth in seconds: ${calculateLevel.inSeconds}');
-      print('time since birth in days: ${calculateLevel.inDays}');
-      print('currentLevel is: ${calculateLevel.inDays}');
       setState(() {
-        petLevel = calculateLevel.inSeconds + 1;
+        petLevel = calculateLevel.inDays + 1;
       });
     }
   }
@@ -259,17 +264,6 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
             petHunger -= incrementModifier;
           });
         }
-        // Waste Loop
-        if (waste == false) {
-          if (petHunger <= 25) {
-            int randomWasteEncounter = (Random().nextInt(100) + 1);
-            if (randomWasteEncounter <= 15) {
-              setState(() {
-                waste = true;
-              });
-            }
-          }
-        }
         // Happiness Loop
         if (petHunger <= minimumModifier && petHappiness > minimumModifier) {
           setState(() {
@@ -308,7 +302,18 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
             });
           }
         }
-        // Emotes/Emotions
+        // Waste Loop
+        if (waste == false) {
+          if (petHunger <= 25) {
+            int randomWasteEncounter = (Random().nextInt(100) + 1);
+            if (randomWasteEncounter <= 15) {
+              setState(() {
+                waste = true;
+              });
+            }
+          }
+        }
+        // Emotes/Emotions Loop
         if (petHunger >= medianModifier &&
             petHappiness >= medianModifier &&
             petHealth >= medianModifier) {
@@ -353,6 +358,8 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
         petHappiness:  ${petHappiness} / ${maximumModifier}
         petHealth   :  ${petHealth} / ${maximumModifier}
         petMood     :  ${petMood} 
+        petDob     :  ${petDob} 
+        currentTime     :  ${DateTime.now()} 
         wasteActive     :  ${waste} 
         /////////////////////////////
         ''');
@@ -559,9 +566,10 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
   }
 
   actionFeed() {
-    if (eating == false && petType != 'octo-egg' && petType != 'octo-ghost') {
+    if (playing == false && eating == false && petType != 'octo-egg' && petType != 'octo-ghost') {
       audioUI.play();
       setState(() {
+        showEmote = false;
         eating = true;
       });
       Future.delayed(const Duration(milliseconds: 3000)).then((_) {
@@ -581,10 +589,26 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
   }
 
   actionPlay() {
-    audioUI.play();
-    setState(() {
-      petHappiness = maximumModifier;
-    });
+    if (playing == false && eating == false && petType != 'octo-egg' && petType != 'octo-ghost') {
+      audioUI.play();
+      setState(() {
+        showEmote = false;
+        playing = true;
+      });
+      Future.delayed(const Duration(milliseconds: 3000)).then((_) {
+        playing = false;
+        if ((petHappiness + positiveModifier) >= maximumModifier) {
+          setState(() {
+            petHappiness = maximumModifier;
+          });
+        } else {
+          setState(() {
+            petHappiness += positiveModifier;
+          });
+        }
+        audioFull.play();
+      });
+    }
   }
 
   showPet() {
@@ -717,6 +741,30 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
     }
   }
 
+  showPlay() {
+    if (playing == true && petType != 'octo-egg' && petType != 'octo-ghost') {
+      return Positioned(
+        bottom: 0,
+        top: -245,
+        left: 0,
+        right: 0,
+        child: SizedBox(
+          height: 200,
+          width: 200,
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 3000),
+            child: Image.asset(
+              playSprites[gameTicker % playSprites.length],
+              fit: BoxFit.fitWidth,
+            ),
+          ),
+        ),
+      );
+    } else {
+      return Positioned(child: Container());
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -799,6 +847,7 @@ class _GameState extends State<Game> with WidgetsBindingObserver {
                                           ),
                                         ),
                                       ),
+                                      showPlay(),
                                       showFood(),
                                       petEmote(petMood),
                                       showWaste(),

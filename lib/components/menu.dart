@@ -24,6 +24,8 @@ class _MenuWidgetState extends State<MenuWidget> {
       return 'assets/images/pet3_layer1.png';
     } else if (pet == 'octo-bot') {
       return 'assets/images/pet4_layer1.png';
+    } else if (pet == 'octo-ox') {
+      return 'assets/images/pet5_layer1.png';
     } else {
       return 'assets/images/egg2.png';
     }
