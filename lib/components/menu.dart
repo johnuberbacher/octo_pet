@@ -72,14 +72,16 @@ class _MenuWidgetState extends State<MenuWidget> {
                     child: ListView.builder(
                       scrollDirection: Axis.vertical,
                       itemCount: petHistoryList.length - 1,
-                      padding: const EdgeInsets.all(15.0),
+                      padding: const EdgeInsets.symmetric(horizontal: 15.0),
                       itemBuilder: (context, index) {
-                        List<String> pet = petHistoryList[index].split(':');
+                        List<String> pet = petHistoryList[index].split('/');
                         return Container(
-                          padding: const EdgeInsets.only(
-                            bottom: 60.0,
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 30.0,
                           ),
-                          child: Column(
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            mainAxisAlignment: MainAxisAlignment.start,
                             children: [
                               SizedBox(
                                 width: 150,
@@ -90,34 +92,41 @@ class _MenuWidgetState extends State<MenuWidget> {
                                   alignment: Alignment.bottomCenter,
                                 ),
                               ),
-                              Column(
-                                children: [
-                                  Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 5.0,
+                              Padding(
+                                padding: const EdgeInsets.only(
+                                  left: 20.0,
+                                ),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.start,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsets.only(
+                                        bottom: 5.0,
+                                      ),
+                                      child: Text(
+                                        pet[0],
+                                        style: TextStyle(fontSize: 18),
+                                      ),
                                     ),
-                                    child: Text(
-                                      pet[0],
-                                      style: TextStyle(fontSize: 18),
+                                    Text(
+                                      'Level: ${pet[2]}',
+                                      style: TextStyle(fontSize: 10, height: 1.5),
                                     ),
-                                  ),
-                                  // Text(
-                                  //  'Octo-ID: ${pet[1]}',
-                                  //  style: TextStyle(fontSize: 10),
-                                  // ),
-                                  Text(
-                                    'Level: ${pet[4]}',
-                                    style: TextStyle(fontSize: 10),
-                                  ),
-                                  Text(
-                                    'Hatch: ${pet[2]}',
-                                    style: TextStyle(fontSize: 10),
-                                  ),
-                                  Text(
-                                    'POOF: ${pet[2]}',
-                                    style: TextStyle(fontSize: 10),
-                                  ),
-                                ],
+                                    Text(
+                                      'Age: ${DateTime.parse(pet[4]).difference(DateTime.parse(pet[3])).inDays} days',
+                                      style: TextStyle(fontSize: 10, height: 1.5),
+                                    ),
+                                    Text(
+                                      'Hatch: ${DateTime.parse(pet[3]).month}/${DateTime.parse(pet[3]).day}/${DateTime.parse(pet[3]).year}',
+                                      style: TextStyle(fontSize: 10, height: 1.5),
+                                    ),
+                                    Text(
+                                      'Poof: ${DateTime.parse(pet[4]).month}/${DateTime.parse(pet[4]).day}/${DateTime.parse(pet[4]).year}',
+                                      style: TextStyle(fontSize: 10, height: 1.5),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ],
                           ),

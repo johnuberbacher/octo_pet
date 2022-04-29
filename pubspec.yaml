@@ -31,6 +31,7 @@ dependencies:
   localstorage: ^4.0.0+1
   flutter_launcher_icons: ^0.9.2
   intl: ^0.17.0
+  animated_widgets: ^1.1.0
 
 dev_dependencies:
   flutter_test:
